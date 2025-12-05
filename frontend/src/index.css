@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .bg-gradient-radial {
+    background: radial-gradient(circle at center, #8A2BE2, #4B0082, #000);
+  }
+  .animate-fade-in-up {
+    animation: fadeInUp 1s ease forwards;
+  }
+  @keyframes fadeInUp {
+    0% {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  
+}
+
+.berita-konten img {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  max-height: 500px;
+  height: auto;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 0.75rem;
+  margin: 1.5rem 0;
+  background-color: #f9fafb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
