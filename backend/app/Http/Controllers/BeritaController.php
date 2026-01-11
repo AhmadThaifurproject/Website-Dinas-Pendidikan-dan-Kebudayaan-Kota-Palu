@@ -12,274 +12,392 @@ use Illuminate\Support\Facades\Response;
 
 class BeritaController extends Controller
 {
- public function store(Request $request)
-{
-    // 🔍 1️⃣ Log semua data masuk dari frontend//
-//Log::info('🟢 DATA MASUK DARI FRONTEND:', $request->all());//
+    private function minioUrl($path)
+    {
+        if (!$path) return null;
+        return rtrim(env('MINIO_URL'), '/') . '/' . $path;
+    }
+   // Helper untuk mengubah URL Lengkap menjadi Path MinIO
+    // Contoh Input: http://127.0.0.1:9000/disdikbud-files/gambar_berita/foto.jpg
+    // Contoh Output: gambar_berita/foto.jpg
+    private function cleanMinioPath($fullUrl)
+    {
+        if (!$fullUrl) return null;
 
-    // 🔍 2️⃣ Jika kamu ingin lihat langsung respon JSON dari backend
-    // (sementara waktu untuk debug saja)
-    //if (config('app.debug')) {
-        //return response()->json([
-            //'debug' => $request->all(),
-           // 'note'  => 'Ini hanya output debug. Hapus bagian ini kalau sudah cocok.',
-        //]);
-    //}
+        // 1. AMBIL BASE URL DARI CONFIG (Bukan dari Storage Facade)
+        // Ini mengambil value dari 'url' => env('MINIO_URL')
+        $minioUrl = config('filesystems.disks.minio.url');
 
-    // ✅ 3️⃣ Validasi input
-    $request->validate([
-        'judul'    => 'required|string|max:255',
-        'isi_berita' => 'required|string',
-        'penulis'  => 'required|string|max:255',
-        'gambar'   => 'nullable|image|max:20480',
-        'status'   => 'required|in:draft,publik',
-        'jadwal'   => 'nullable|date',
-        'kategori' => 'nullable|string|max:255',
-        'tags'     => 'nullable|array',
-        'tags.*'   => 'string|max:255',
-    ]);
+        // 2. JIKA CONFIG URL KOSONG, RAKIT MANUAL
+        // Jika di .env MINIO_URL kosong, kita gabung Endpoint + Bucket
+        if (empty($minioUrl)) {
+            $endpoint = config('filesystems.disks.minio.endpoint');
+            $bucket   = config('filesystems.disks.minio.bucket');
+            $minioUrl = $endpoint . '/' . $bucket;
+        }
 
-    // ✅ 4️⃣ Upload gambar jika ada
-    $gambarPath = null;
-    if ($request->hasFile('gambar')) {
-        $gambarPath = $request->file('gambar')->store('gambar_berita', 'public');
+        // 3. NORMALISASI: Pastikan diakhiri slash '/'
+        if (!str_ends_with($minioUrl, '/')) {
+            $minioUrl .= '/';
+        }
+
+        // 4. PROSES PEMBERSIHAN (Logic Utama)
+        // Jika URL lengkap mengandung Base URL kita, potong depannya.
+        if (str_contains($fullUrl, $minioUrl)) {
+            return str_replace($minioUrl, '', $fullUrl);
+        }
+
+        // 5. SAFETY NET (Jaga-jaga jika IP beda, misal localhost vs 127.0.0.1)
+        // Kita paksa ambil path-nya saja dari URL apapun
+        $parsed = parse_url($fullUrl);
+        
+        if (isset($parsed['path'])) {
+            $path = ltrim($parsed['path'], '/'); // Hapus slash di depan
+            $bucket = config('filesystems.disks.minio.bucket');
+
+            // Cek apakah path diawali nama bucket? Jika iya, hapus bucketnya
+            // Contoh: disdikbud-files/gambar/foto.jpg -> gambar/foto.jpg
+            if (str_starts_with($path, $bucket . '/')) {
+                // Potong nama bucket + slash
+                return substr($path, strlen($bucket) + 1);
+            }
+            
+            return $path;
+        }
+
+        // Jika semua cara gagal, kembalikan apa adanya
+        return $fullUrl;
     }
 
-    // ✅ 5️⃣ Simpan data berita
-    $berita = Berita::create([
-        'judul'          => $request->judul,
-        'slug'           => Str::slug($request->judul),
-        'isi_berita'     => $request->isi_berita,
-        'penulis'        => $request->penulis,
-        'gambar'         => $gambarPath,
-        'tanggal_upload' => now(),
-        'views'          => 0,
-        'status'         => $request->status,
-        'jadwal'         => $request->jadwal,
-        'kategori'       => $request->kategori,
-    ]);
+  public function store(Request $request)
+    {
+        // 1. Validasi Input
+        $request->validate([
+            'judul'      => 'required|string|max:255',
+            'isi_berita' => 'required|string',
+            'penulis'    => 'required|string|max:255',
+            'gambar'     => 'nullable|image|max:20480', // Validasi file upload
+            'gambar_url' => 'nullable|string',           // Validasi URL dari editor
+            'jadwal'     => 'nullable|date',
+            'kategori'   => 'nullable|string|max:255',
+            'tags'       => 'nullable|array',
+            'tags.*'     => 'string|max:255',
+        ]);
 
-    // ✅ 6️⃣ Sinkronisasi tags (kalau dikirim)
-    $tagIds = collect($request->tags ?? [])
-        ->map(fn($tagName) => Tag::firstOrCreate(['nama' => $tagName])->id);
+        $gambarPath = null;
 
-    $berita->tags()->sync($tagIds);
+        // 2. Logika Simpan Gambar (Prioritas)
+        
+        // PRIORITAS A: Cek File Upload Manual (Input type="file")
+        if ($request->hasFile('gambar')) {
+            $file = $request->file('gambar');
+            $filename = uniqid() . '_' . $file->getClientOriginalName();
+            $folder = 'gambar_berita';
 
-    // ✅ 7️⃣ Respon akhir
-    return response()->json([
-        'message' => 'Berita & tag berhasil disimpan',
-        'data'    => $berita->load('tags')
-    ], 201);
+            // Set path relatif untuk MinIO
+            $gambarPath = $folder . '/' . $filename;
+            
+            // Upload ke MinIO
+            Storage::disk('minio')->putFileAs($folder, $file, $filename);
+        }
+        // PRIORITAS B: Jika tidak ada file manual, Cek URL dari Editor
+        elseif ($request->filled('gambar_url')) {
+            // PENTING: Gunakan fungsi helper cleanMinioPath
+            // Agar yang tersimpan di DB hanya "folder/file.jpg", bukan "http://localhost:9000/..."
+            $gambarPath = $this->cleanMinioPath($request->input('gambar_url'));
+        }
+
+        // 3. Simpan ke Database
+        $berita = Berita::create([
+            'judul'          => $request->judul,
+            'slug'           => Str::slug($request->judul),
+            'isi_berita'     => $request->isi_berita,
+            'penulis'        => $request->penulis,
+            'gambar'         => $gambarPath, // Path bersih (relative) atau URL Eksternal
+            'tanggal_upload' => $request->jadwal ?? now(),
+            'views'          => 0,
+            // 'status'      => 'publik', // HAPUS (Biarkan default database yang bekerja)
+            'jadwal'         => $request->jadwal,
+            'kategori'       => $request->kategori,
+        ]);
+
+        // 4. Simpan Tags
+        $tagIds = collect($request->tags ?? [])
+            ->map(fn($tagName) => Tag::firstOrCreate(['nama' => $tagName])->id);
+
+        $berita->tags()->sync($tagIds);
+
+        // 5. Return Response
+        return response()->json([
+            'message'    => 'Berita & tag berhasil disimpan',
+            'data'       => $berita->load('tags'),
+            // Bungkus kembali path menjadi URL Lengkap untuk frontend
+            'gambar_url' => $this->minioUrl($berita->gambar),
+        ], 201);
+    }
+
+public function index()
+{
+    $items = Berita::with('tags')
+        ->orderBy('tanggal_upload', 'desc')
+        ->get()
+        ->map(function ($b) {
+            return [
+                'id' => $b->id,
+                'judul' => $b->judul,
+                'slug' => $b->slug,
+                'kategori' => $b->kategori, 
+                'gambar_url' => $this->minioUrl($b->gambar),
+                'tanggal_upload' => $b->tanggal_upload,
+                'penulis' => $b->penulis,
+                'tags' => $b->tags,
+                'isi_berita' => $b->isi_berita,
+                'views' => $b->views,
+            ];
+        });
+
+    return response()->json($items);
 }
 
-    public function index()
-    {
-        return Berita::with('tags')
-        ->orderBy('tanggal_upload', 'desc')
-        ->get();
-    }
+
     public function showBySlug($slug)
     {
-        // otomatis 404 jika tidak ketemu
-        $berita = Berita::where('slug', $slug)
-                    ->with('tags') // langsung load relasi tags
-                    ->firstOrFail();
+        $b = Berita::where('slug', $slug)
+            ->with('tags')
+            ->firstOrFail();
 
-        return response()->json($berita);
+        return response()->json([
+            'data' => $b,
+            'gambar_url' => $this->minioUrl($b->gambar),
+        ]);
     }
 
 
     public function getBySlug($slug)
     {
-        $berita = Berita::where('slug', $slug)->first();
+        $b = Berita::where('slug', $slug)->first();
 
-        if (!$berita) {
+        if (!$b) {
             return response()->json(['message' => 'Berita tidak ditemukan'], 404);
         }
 
-        return response()->json([
-            'id' => $berita->id,
-            'judul' => $berita->judul,
-            'slug' => $berita->slug,
-            'isi' => $berita->isi_berita,
-            'gambar' => $berita->gambar ? asset('storage/' . $berita->gambar) : null,
-            'penulis' => $berita->penulis,
-            'tanggal_upload' => $berita->tanggal_upload,
-            'views' => $berita->views
+         return response()->json([
+            'id' => $b->id,
+            'judul' => $b->judul,
+            'slug' => $b->slug,
+            'kategori' => $b->kategori, 
+            'isi' => $b->isi_berita,
+            'gambar_url' => $this->minioUrl($b->gambar),
+            'penulis' => $b->penulis,
+            'tanggal_upload' => $b->tanggal_upload,
+            'views' => $b->views,
         ]);
     }
 
+
     public function show($slug)
-{
-    $berita = Berita::where('slug', $slug)->firstOrFail();
+    {
+        $b = Berita::where('slug', $slug)->firstOrFail();
 
-    // Ambil 1 baris pertama dari isi_berita sebagai preview
-    $preview = strtok($berita->isi_berita, "\n");
-
-    return response()->json([
-        'title' => $berita->judul,
-        'isi' => $berita->isi_berita,
-        'image_url' => $berita->gambar
-            ? asset('storage/' . $berita->gambar)
-            : null,
-        'tanggal_upload' => $berita->created_at ? $berita->created_at->toDateString() : null,
-        'penulis' => $berita->penulis ?? 'Admin',
-    ]);
-}
+        return response()->json([
+            'judul' => $b->judul,
+            'isi' => $b->isi_berita,
+            'gambar_url' => $this->minioUrl($b->gambar),
+            'tanggal_upload' => $b->created_at?->toDateString(),
+            'penulis' => $b->penulis ?? 'Admin',
+        ]);
+    }
 
 
-  public function update(Request $request, $slug)
-{
-    Log::info("=== DEBUG UPDATE START ===", [
-        'slug_param' => $slug,
-        'incoming' => $request->all(),
-    ]);
+    public function update(Request $request, $slug)
+    {
+        // 1. Cari Berita Lama
+        $berita = Berita::where('slug', $slug)->firstOrFail();
 
-    $berita = Berita::where('slug', $slug)->firstOrFail();
+        // 2. Validasi
+        $request->validate([
+            'judul'      => 'required|string|max:255',
+            'isi_berita' => 'required|string',
+            'penulis'    => 'required|string|max:255',
+            'gambar'     => 'nullable|image|max:20480',
+            'gambar_url' => 'nullable|string',
+            'jadwal'     => 'nullable|date',
+            'kategori'   => 'nullable|string|max:255',
+            'tags'       => 'nullable|array',
+        ]);
 
-    $validated = $request->validate([
-        'judul'          => 'sometimes|string|max:255',
-        'isi_berita'     => 'sometimes|string',
-        'penulis'        => 'sometimes|string|max:255',
-        'gambar'         => 'sometimes|image|max:20480',
-        'tanggal_upload' => 'sometimes|date',
-        'status'         => 'sometimes|in:draft,publik',
-        'jadwal'         => 'sometimes|date',
-        'kategori'       => 'sometimes|string|max:255',
-        'tags'           => 'sometimes|string|max:255',
-    ]);
+        // 3. Logic Gambar
+        $gambarPath = $berita->gambar; // Default pakai gambar lama
 
-    Log::info("=== DEBUG VALIDATED ===", ['validated' => $validated]);
+        // PRIORITAS A: Upload Manual (Ganti Gambar)
+        if ($request->hasFile('gambar')) {
+            // Hapus gambar lama di MinIO agar tidak menumpuk sampah (Best Practice)
+            if ($gambarPath && Storage::disk('minio')->exists($gambarPath)) {
+                Storage::disk('minio')->delete($gambarPath);
+            }
 
-    foreach ($validated as $field => $value) {
-        if ($value !== null && $value !== '') {
-            $berita->$field = $value;
+            // Upload yang baru
+            $file = $request->file('gambar');
+            $filename = uniqid() . '_' . $file->getClientOriginalName();
+            $folder = 'gambar_berita';
+            $gambarPath = $folder . '/' . $filename;
+            Storage::disk('minio')->putFileAs($folder, $file, $filename);
+        } 
+        // PRIORITAS B: Ganti via Editor (URL)
+        elseif ($request->filled('gambar_url')) {
+            // Bersihkan URL menjadi Path Relative
+            $newPath = $this->cleanMinioPath($request->input('gambar_url'));
+            
+            // Update hanya jika path-nya berbeda
+            if ($newPath !== $gambarPath) {
+                 $gambarPath = $newPath;
+            }
         }
-    }
 
-    Log::info("=== DEBUG AFTER FILL ===", $berita->toArray());
+        // 4. Update Tabel Berita (HANYA KOLOM YANG ADA DI TABEL)
+        // Tag TIDAK dimasukkan disini agar tidak error SQL
+        $berita->update([
+            'judul'      => $request->judul,
+            'slug'       => Str::slug($request->judul),
+            'isi_berita' => $request->isi_berita,
+            'penulis'    => $request->penulis,
+            'gambar'     => $gambarPath, // Path Bersih
+            'jadwal'     => $request->jadwal,
+            'kategori'   => $request->kategori,
+        ]);
 
-    if ($request->hasFile('gambar')) {
-
-        if ($berita->gambar && file_exists(public_path('storage/' . $berita->gambar))) {
-            unlink(public_path('storage/' . $berita->gambar));
+        // 5. Update Relasi Tags (Sync)
+        if ($request->has('tags')) {
+            $tagIds = collect($request->tags ?? [])
+                ->map(fn($tagName) => Tag::firstOrCreate(['nama' => $tagName])->id);
+            
+            $berita->tags()->sync($tagIds);
         }
 
-        $berita->gambar = $request->file('gambar')->store('gambar_berita', 'public');
+        return response()->json([
+            'message'    => 'Berita berhasil diperbarui',
+            'data'       => $berita->load('tags'),
+            'gambar_url' => $this->minioUrl($berita->gambar),
+        ]);
     }
-
-    if ($request->filled('judul')) {
-        $berita->slug = Str::slug($request->judul);
-    }
-
-    Log::info("=== DEBUG BEFORE SAVE ===", [
-        'dirty' => $berita->getDirty(),
-        'original' => $berita->getOriginal(),
-        'final_slug' => $berita->slug,
-    ]);
-
-    $berita->save();
-
-    Log::info("=== DEBUG AFTER SAVE ===", [
-        'fresh' => $berita->fresh()->toArray()
-    ]);
-
-    return response()->json([
-        'message' => 'Berita diperbarui',
-        'data' => $berita
-    ]);
-}
-
-
-
     public function destroy($slug)
     {
-        $berita = Berita::where('slug', $slug)->first();
+        $b = Berita::where('slug', $slug)->firstOrFail();
 
-        if (!$berita) {
-            return response()->json(['message' => 'Berita tidak ditemukan'], 404);
+        if ($b->gambar && Storage::disk('minio')->exists($b->gambar)) {
+            Storage::disk('minio')->delete($b->gambar);
         }
 
-        // hapus file gambar kalau ada
-        if ($berita->gambar && file_exists(public_path('storage/' . $berita->gambar))) {
-            unlink(public_path('storage/' . $berita->gambar));
-        }
-
-        $berita->delete();
+        $b->delete();
 
         return response()->json(['message' => 'Berita berhasil dihapus']);
     }
+
 public function setHighlight(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'slug'     => 'required|string',
-        'kategori' => 'required|string',
-    ]);
+    {
+        $validator = Validator::make($request->all(), [
+            'slug' => 'required|string|exists:beritas,slug',
+            'highlight' => 'required'
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        if ($request->boolean('highlight')) {
+            Berita::where('highlight', true)->update(['highlight' => false]);
+        }
+
+        $berita = Berita::where('slug', $request->slug)->firstOrFail();
+
+        // KETIK ULANG MANUAL BAGIAN INI JIKA MASIH ERROR SETELAH PASTE
+        $berita->update([
+            'highlight' => $request->boolean('highlight'),
+            'status_tampil' => true
+        ]);
+
+        return response()->json([
+            'message' => 'Status tampilan berita berhasil diperbarui',
+            'data' => $berita
+        ]);
     }
 
-    // Cari berdasarkan slug
-    $berita = Berita::where('slug', $request->slug)->first();
 
-    if (!$berita) {
-        return response()->json(['error' => 'Not found'], 404);
+    public function highlight()
+{
+    // Ambil data terbaru (tanpa filter status karena kolom sudah dihapus)
+    $items = Berita::where('status_tampil', true)
+        ->orderByDesc('tanggal_upload')
+        ->get()
+        ->map(function ($b) {
+
+            $thumbnail = null;
+
+            // 1. Cek apakah kolom gambar di database terisi?
+            if ($b->gambar) {
+                // CEK PINTAR: Apakah isinya sudah berupa Link Lengkap (http...)?
+                if (str_starts_with($b->gambar, 'http')) {
+                    // KASUS A: Gambar dari Editor (sudah link lengkap) -> Pakai langsung
+                    $thumbnail = $b->gambar;
+                } else {
+                    // KASUS B: Gambar Upload Manual (masih path pendek) -> Bungkus pakai MinIO
+                    $thumbnail = $this->minioUrl($b->gambar);
+                }
+            } 
+            // 2. Jika kolom gambar kosong, cari manual di dalam HTML isi berita
+            else {
+                $thumbnail = $this->extractFirstImageFromHtml($b->isi_berita);
+            }
+
+            return [
+                'id'            => $b->id,
+                'slug'          => $b->slug,
+                'judul'         => $b->judul,
+                'excerpt'       => Str::limit(strip_tags($b->isi_berita), 120),
+                'thumbnail'     => $thumbnail,
+                'kategori'      => $b->kategori,
+                'highlight'     => (bool) $b->highlight, // Pastikan ini boolean true/false
+                'published_at'  => $b->tanggal_upload,
+            ];
+        });
+
+    return response()->json($items);
+}
+
+
+    /**
+     * Helper: ambil URL gambar pertama dari HTML
+     */
+    private function extractFirstImageFromHtml(?string $html)
+    {
+        if (!$html) return null;
+
+        // Cari tag <img src="...">
+        if (preg_match('/<img[^>]+src="([^">]+)"/i', $html, $matches)) {
+            return $matches[1];
+        }
+
+        return null;
     }
 
-    // Update highlight + kategori
-    $berita->highlight = true;
-    $berita->kategori  = $request->kategori;
-    $berita->save();
-
-    return response()->json([
-        'message' => 'Berita berhasil ditandai sebagai highlight',
-        'data'    => $berita
-    ], 200);
-}
-
-public function highlight()
-{
-    $highlighted = Berita::where('highlight', 1)->get();
-
-    $data = $highlighted->map(function ($berita) {
-        return [
-            'slug' => $berita->slug,
-            'title' => $berita->judul,
-            'description' => Str::limit(strip_tags($berita->isi_berita), 100), // hanya preview
-            'image_url' =>  $berita->gambar ? asset('storage/' . $berita->gambar) : null,
-            'category' => $berita->kategori,
-        ];
-    });
-
-    return response()->json($data);
-}
 
 
-
-public function highlightImage($filename)
-{
-    $path = storage_path('app/public/gambar_berita/' . $filename);
-
-    if (!file_exists($path)) {
-        abort(404);
-    }
-
-    $mimeType = mime_content_type($path);
-    return Response::file($path, ['Content-Type' => $mimeType]);
-}
-public function uploadEditorImage(Request $request)
-{
+    public function uploadEditorImage(Request $request)
+    {   
     if (!$request->hasFile('image')) {
         return response()->json(['error' => 'Tidak ada file dikirim.'], 400);
     }
 
-    $path = $request->file('image')->store('editor_images', 'public');
+    $file = $request->file('image');
+    $filename = uniqid() . '_' . $file->getClientOriginalName();
+    $folder = 'editor_images';
+    $path = $folder . '/' . $filename;
+
+    Storage::disk('minio')->putFileAs($folder, $file, $filename);
 
     return response()->json([
-        'url' => asset('storage/' . $path)
+        'url' => rtrim(env('MINIO_URL'), '/') . '/' . $path
     ]);
-}
-
+    }
 
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Contracts\Filesystem\Cloud;
 
 class UploadController extends Controller
 {
@@ -20,45 +21,47 @@ class UploadController extends Controller
         $originalName = $request->file('file')->getClientOriginalName();
         $path = "$folder/$originalName";
 
-        // 🔑 Ambil flag force dari request
-        $force = $request->has('force') && $request->input('force') === 'true';
+        // Flag replace
+        $force = $request->input('force') === 'true';
 
-        // 🚫 Cek apakah file dengan nama sama sudah ada di lokasi ini
-        if (Storage::disk('public')->exists($path)) {
+        /** @var Cloud $disk */
+        $disk = Storage::disk('minio'); // ← PASTI MINIO
+
+        // Cek file di lokasi yg sama
+        if ($disk->exists($path)) {
             if ($force) {
-                // Hapus file lama, ganti dengan file baru
-                Storage::disk('public')->delete($path);
+                $disk->delete($path);
             } else {
                 return response()->json([
-                    'message' => 'Gagal, file dengan nama yang sama sudah ada di lokasi ini. Silakan ganti nama file Anda.'
+                    'message' => 'File sudah ada. Gunakan force=true untuk mengganti.'
                 ], 409);
             }
         }
 
-        // 🔍 Cek apakah file dengan nama sama ada di lokasi lain
-        $allFiles = Storage::disk('public')->allFiles();
+        // Cek duplikasi di lokasi lain
+        $allFiles = $disk->allFiles();
         $duplicateLocations = [];
 
         foreach ($allFiles as $f) {
             if (basename($f) === $originalName && $f !== $path) {
-                $duplicateLocations[] = dirname($f); // contoh hasil: "ketenagaan/karpeg"
+                $duplicateLocations[] = dirname($f);
             }
         }
 
         if (!empty($duplicateLocations) && !$force) {
             return response()->json([
-                'message'   => 'File dengan nama sama ditemukan di lokasi lain',
+                'message' => 'File dengan nama sama ditemukan di lokasi lain.',
                 'locations' => $duplicateLocations
             ], 409);
         }
 
-        // ✅ Simpan file ke folder tujuan (replace jika force = true)
-        $request->file('file')->storeAs($folder, $originalName, 'public');
+        // Upload ke MinIO
+        $disk->putFileAs($folder, $request->file('file'), $originalName);
 
         return response()->json([
             'message' => 'File berhasil diupload',
             'path' => $path,
-            'url' => asset('storage/' . $path),
+            'url'  => $disk->url($path), // URL MinIO
             'originalName' => $originalName,
         ]);
     }
@@ -67,15 +70,17 @@ class UploadController extends Controller
     {
         $bidang = strtolower($bidang);
         $layanan = strtolower($layanan);
-
         $folder = "$bidang/$layanan";
 
-        $files = Storage::disk('public')->files($folder);
+        /** @var Cloud $disk */
+        $disk = Storage::disk('minio'); // ← MINIO
 
-        $data = array_map(function ($filePath) {
+        $files = $disk->files($folder);
+
+        $data = array_map(function ($filePath) use ($disk) {
             return [
                 'name' => basename($filePath),
-                'url'  => asset('storage/' . $filePath),
+                'url'  => $disk->url($filePath),
             ];
         }, $files);
 
@@ -84,16 +89,16 @@ class UploadController extends Controller
 
     public function deleteFile($bidang, $layanan, $filename)
     {
-        $bidang = strtolower($bidang);
-        $layanan = strtolower($layanan);
+        $path = strtolower("$bidang/$layanan/$filename");
 
-        $path = "$bidang/$layanan/$filename";
+        /** @var Cloud $disk */
+        $disk = Storage::disk('minio'); // ← MINIO
 
-        if (Storage::disk('public')->exists($path)) {
-            Storage::disk('public')->delete($path);
-            return response()->json(['message' => 'File berhasil dihapus']);
+        if ($disk->exists($path)) {
+            $disk->delete($path);
+            return response()->json(['message' => 'Berhasil dihapus']);
         } else {
-            return response()->json(['message' => 'File tidak ditemukan'], 404);
+            return response()->json(['message' => 'Tidak ditemukan'], 404);
         }
     }
 }

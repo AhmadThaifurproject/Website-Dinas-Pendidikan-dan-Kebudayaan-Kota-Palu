@@ -1,0 +1,660 @@
+// src/pages/Public/LayananProgramKerja/LayananProgramKerja.tsx
+import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import LayananViewer from "../../../../../feature/layanan/LayananViewer"; 
+import {
+  ClipboardList,
+  Download,
+  Phone,
+  ArrowRight,
+  CalendarRange,
+  FileText,
+  Target,
+  BarChart2,
+  MapPin,
+  Globe,
+  TrendingUp,
+  Briefcase,
+  Layout,
+  RefreshCw,
+  MessageCircle,
+  HelpCircle,
+  User,
+  Settings,
+  Database,
+  Award,
+  Mail
+} from "lucide-react";
+
+// --- 1. TYPE DEFINITIONS (SINKRON DENGAN PAYLOAD ADMIN) ---
+interface ContentData {
+  layanan: string;
+  
+  // Feature Flags
+  isIndikatorActive: boolean;
+  isSiklusActive: boolean;
+  
+  // Data Arrays
+  // Catatan: Admin mengirim 'indikatorKinerja' untuk Program Kerja
+  indikatorKinerja?: string[]; 
+  
+  // Catatan: Admin mengirim 'siklusPerencanaan' dengan properti color
+  siklusPerencanaan?: { 
+    step: number; 
+    title: string; 
+    desc: string; 
+    color?: string; // blue, emerald, purple, etc.
+  }[];
+  
+  downloads?: { name: string; url: string }[];
+  
+  // Catatan: Admin memapping 'jamOperasional' menjadi 'agendaKegiatan'
+  agendaKegiatan?: { 
+    day: string; 
+    activity: string; // Admin mapping: time -> activity
+    status?: string;  // work, off, special
+    pic?: string;     // Admin mapping: breakTime -> pic
+  }[];
+  
+  mapLink?: string;
+  
+  // UI Settings (Dynamic Content)
+  previewSectionTitle?: string;
+  previewSectionDesc?: string;
+  
+  tabTitle?: string;
+  tabIcon?: string;
+  
+  portalVisible?: boolean;
+  portalUrl?: string;
+  portalLabel?: string;
+  
+  downloadSectionTitle?: string;
+  downloadSectionDesc?: string;
+  
+  contactSectionTitle?: string;
+  contactSectionDesc?: string;
+  contactSectionIcon?: string;
+  contacts?: { name: string; number: string }[];
+}
+
+// --- KOMPONEN LOADER / UPDATING OVERLAY ---
+const UpdatingOverlay = () => (
+  <motion.div 
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    className="absolute inset-0 z-50 bg-white/60 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center"
+  >
+    <div className="relative">
+      <motion.div 
+        animate={{ rotate: 360 }}
+        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        className="w-16 h-16 rounded-full border-4 border-t-indigo-500 border-r-purple-500 border-b-blue-500 border-l-transparent"
+      />
+      <div className="absolute inset-0 flex items-center justify-center text-indigo-600">
+        <RefreshCw size={24} className="animate-spin-slow" />
+      </div>
+    </div>
+    <motion.p 
+      initial={{ y: 10, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      className="mt-4 font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 text-sm tracking-wider uppercase"
+    >
+      Menyinkronkan Data...
+    </motion.p>
+  </motion.div>
+);
+
+export default function LayananProgramKerja() {
+  const [activeTab, setActiveTab] = useState<"program" | "agenda">("program");
+  
+  // State Data
+  const [content, setContent] = useState<ContentData | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const prevContentRef = useRef<string>("");
+
+  // --- 2. CONFIG FETCHING ---
+  // Pastikan URL ini sesuai dengan categorySlug ('sub_sekretariat') dan layanan ('program-kerja')
+  const API_URL = "http://localhost:8000/api/sub_sekretariat/content/program-kerja";
+  const FILE_API_URL = "http://localhost:8000/api/sub_sekretariat/upload/program-kerja";
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(API_URL);
+        
+        if (response.ok) {
+          const rawData = await response.json();
+          const stringifiedData = JSON.stringify(rawData);
+
+          // Deteksi perubahan data untuk memicu efek loading halus
+          if (prevContentRef.current !== stringifiedData) {
+            if (!initialLoading) {
+              setIsUpdating(true);
+              await new Promise(r => setTimeout(r, 800)); // Delay kosmetik agar user sadar ada update
+            }
+            setContent(rawData);
+            prevContentRef.current = stringifiedData; 
+            setIsUpdating(false);
+          }
+        }
+      } catch (error) {
+        console.error("Error connecting to server", error);
+      } finally {
+        if (initialLoading) setInitialLoading(false);
+      }
+    };
+
+    fetchData(); 
+    const intervalId = setInterval(fetchData, 3000); // Polling setiap 3 detik
+    return () => clearInterval(intervalId);
+  }, [initialLoading]); 
+
+  // --- 3. HELPER FUNCTIONS (MAPPING DARI ADMIN) ---
+
+  // A. Mapping Warna Siklus (Dari string 'blue', 'emerald' ke Class Tailwind)
+  const getStepColor = (color: string | undefined) => {
+    switch(color) {
+      case 'blue': return 'bg-blue-100 text-blue-600 border-blue-200 ring-blue-500';
+      case 'emerald': return 'bg-emerald-100 text-emerald-600 border-emerald-200 ring-emerald-500';
+      case 'purple': return 'bg-purple-100 text-purple-600 border-purple-200 ring-purple-500';
+      case 'amber': return 'bg-amber-100 text-amber-600 border-amber-200 ring-amber-500';
+      case 'rose': return 'bg-rose-100 text-rose-600 border-rose-200 ring-rose-500';
+      case 'indigo': return 'bg-indigo-100 text-indigo-600 border-indigo-200 ring-indigo-500';
+      default: return 'bg-blue-100 text-blue-600 border-blue-200 ring-blue-500';
+    }
+  };
+
+  // B. Mapping Status Agenda
+  const getStatusBadge = (status: string | undefined) => {
+    switch(status) {
+        case 'work': return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-600 border border-emerald-200">Aktif / Terjadwal</span>;
+        case 'off': return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-600 border border-rose-200">Selesai / Libur</span>;
+        case 'special': return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-600 border border-amber-200">Prioritas</span>;
+        default: return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500">Draft</span>;
+    }
+  };
+
+  // C. Mapping Icon (String dari Admin -> Lucide Component)
+  const getIconComponent = (iconName: string | undefined, defaultIcon: any) => {
+    switch (iconName) {
+        case "FileText": return FileText;
+        case "ClipboardList": return Briefcase;
+        case "Users": return User;
+        case "Target": return Award;
+        case "Settings": return Settings;
+        case "Database": return Database;
+        case "Phone": return Phone;
+        case "MessageCircle": return MessageCircle;
+        case "Mail": return Mail;
+        case "HelpCircle": return HelpCircle;
+        default: return defaultIcon; 
+    }
+  };
+
+  // --- 4. RENDER LOADING STATE ---
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+            <div className="relative">
+                <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                <div className="absolute inset-0 flex items-center justify-center text-indigo-600 font-bold text-xs">DATA</div>
+            </div>
+            <p className="text-slate-500 font-medium animate-pulse">Memuat program kerja...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // --- 5. DATA FALLBACK & PREPARATION ---
+  const data: ContentData = content || {
+    layanan: "program-kerja", 
+    isIndikatorActive: false,
+    isSiklusActive: false,
+    indikatorKinerja: [],
+    siklusPerencanaan: [],
+    downloads: [],
+    agendaKegiatan: [],
+    mapLink: "#",
+    previewSectionTitle: "Dokumen Perencanaan",
+    previewSectionDesc: "Pratinjau dokumen.",
+    tabTitle: "Dokumen Program", 
+    tabIcon: "FileText",
+    portalVisible: false,
+    portalUrl: "#",
+    portalLabel: "Akses Aplikasi",
+    downloadSectionTitle: "Unduh Dokumen",
+    downloadSectionDesc: "Template dan dokumen pendukung.",
+    contactSectionTitle: "Kontak Layanan",
+    contactSectionDesc: "Hubungi admin untuk informasi lebih lanjut.",
+    contactSectionIcon: "Phone",
+    contacts: []
+  };
+
+  // Resolve Dynamic Icons
+  const TabIconProgram = getIconComponent(data.tabIcon, FileText);
+  const ContactIcon = getIconComponent(data.contactSectionIcon, Phone);
+
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-500 selection:text-white">
+      
+      {/* ================= HERO SECTION (STATIC / THEMED) ================= */}
+      <div className="relative z-20 mb-12">
+        <div className="bg-[#0f172a] pt-40 pb-48 px-6 rounded-b-[3rem] shadow-2xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-900 to-[#1e293b]"></div>
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-teal-600/20 blur-[120px] rounded-full mix-blend-screen opacity-50"></div>
+          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-600/10 blur-[100px] rounded-full mix-blend-screen opacity-40"></div>
+          
+          <div className="relative container mx-auto max-w-5xl text-center z-10">
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="flex justify-center items-center gap-2 text-sm text-indigo-300 font-medium tracking-widest uppercase mb-6"
+            >
+              <Link to="/" className="hover:text-white transition-colors duration-300">Beranda</Link>
+              <span className="text-slate-500">•</span>
+              <Link to="/sub-sekretariat" className="text-blue-400 hover:text-white transition-colors duration-300">Sub-Sekretariat</Link>
+            </motion.div>
+
+            <motion.h1 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8 }}
+              className="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-6 leading-tight drop-shadow-2xl"
+            >
+              Layanan <br className="hidden md:block"/> 
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 via-indigo-400 to-purple-400 animate-gradient-x">
+                Program Kerja
+              </span>
+            </motion.h1>
+
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="text-slate-300 text-lg max-w-2xl mx-auto font-light leading-relaxed mb-8"
+            >
+              Transparansi rencana strategis, anggaran, dan monitoring capaian kinerja instansi.
+            </motion.p>
+             <motion.div 
+               initial={{ width: 0 }}
+               animate={{ width: "6rem" }}
+               transition={{ duration: 1, delay: 0.5 }}
+               className="h-1 bg-gradient-to-r from-teal-500 to-indigo-500 mx-auto rounded-full"
+             ></motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* ================= KONTEN UTAMA ================= */}
+      <div className="relative z-30 -mt-32 pb-24 px-4 md:px-8">
+        <div className="container mx-auto max-w-7xl">
+          <div className="flex flex-col lg:flex-row gap-8">
+            
+            {/* === KOLOM KIRI (Konten Utama) === */}
+            <motion.div 
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="lg:w-2/3 order-2 lg:order-1 relative"
+            >
+              <AnimatePresence>
+                {isUpdating && <UpdatingOverlay />}
+              </AnimatePresence>
+              
+              <motion.div 
+                layout
+                transition={{ duration: 0.4, type: "spring", stiffness: 100, damping: 15 }}
+                className="bg-white rounded-3xl shadow-2xl border border-slate-100 relative overflow-hidden flex flex-col h-fit"
+              >
+                {/* Header Gradient Stripe */}
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-400 via-indigo-500 to-purple-500 z-10"></div>
+
+                {/* --- NAVIGATION TABS --- */}
+                <div className="flex border-b border-slate-100 bg-slate-50/50 pt-4 px-4 md:px-8 gap-6 overflow-x-auto scrollbar-hide z-0">
+                  <button 
+                    onClick={() => setActiveTab("program")}
+                    className={`pb-4 px-2 font-bold text-sm md:text-base flex items-center gap-2 transition-all relative ${
+                      activeTab === "program" ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"
+                    }`}
+                  >
+                    <TabIconProgram size={20} />
+                    {/* Menggunakan Judul Tab dari Admin */}
+                    {data.tabTitle || "Dokumen Program"}
+                    {activeTab === "program" && (
+                      <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600 rounded-t-full" />
+                    )}
+                  </button>
+
+                  <button 
+                    onClick={() => setActiveTab("agenda")}
+                    className={`pb-4 px-2 font-bold text-sm md:text-base flex items-center gap-2 transition-all relative ${
+                      activeTab === "agenda" ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"
+                    }`}
+                  >
+                    <CalendarRange size={20} />
+                    Jadwal & Agenda
+                    {activeTab === "agenda" && (
+                      <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600 rounded-t-full" />
+                    )}
+                  </button>
+                </div>
+
+                {/* --- TAB CONTENT AREA --- */}
+                <div className="p-6 md:p-8 flex-1 bg-white relative">
+                  <AnimatePresence mode="wait">
+                    
+                    {/* === TAB 1: DOKUMEN & INDIKATOR === */}
+                    {activeTab === "program" && (
+                      <motion.div
+                        key="program"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-10"
+                      >
+                        {/* 1. FILE PREVIEW UTAMA */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                                    <BarChart2 size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-slate-800">{data.previewSectionTitle || "Dokumen Perencanaan"}</h3>
+                                    {data.previewSectionDesc && (
+                                        <p className="text-sm text-slate-500">{data.previewSectionDesc}</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* CONTAINER PREVIEWER */}
+                            <div className="w-full h-[500px] bg-slate-50 rounded-2xl border border-slate-200 shadow-inner relative isolate overflow-hidden overscroll-contain transform-gpu z-0">
+                                {/* Menggunakan Endpoint yang sama dengan Admin untuk Upload */}
+                                <LayananViewer
+                                    judul="" 
+                                    deskripsi=""
+                                    endpoint={FILE_API_URL} 
+                                />
+                            </div>
+                        </div>
+
+                        {/* BAGIAN BAWAH (DINAMIS BERDASARKAN TOGGLE ADMIN) */}
+                        {(data.isIndikatorActive || data.isSiklusActive) && (
+                          <motion.div 
+                            layout 
+                            initial={{ opacity: 0 }} 
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="space-y-10"
+                          >
+                            <div className="border-t border-slate-100"></div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                
+                                {/* 2. INDIKATOR KINERJA */}
+                                {data.isIndikatorActive && (
+                                  <div className="space-y-5">
+                                      <div className="flex items-center gap-2 mb-2">
+                                          <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                              <Target className="text-indigo-500" size={20}/>
+                                              Indikator Kinerja (IKU)
+                                          </h3>
+                                      </div>
+                                      <ul className="space-y-3">
+                                          {(data.indikatorKinerja || []).length > 0 ? (
+                                            (data.indikatorKinerja || []).map((target, index) => (
+                                              target && (
+                                                <li key={index} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-indigo-200 transition-colors">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-teal-400 mt-2 shrink-0"></div>
+                                                    <span className="text-slate-600 text-sm font-medium leading-relaxed">{target}</span>
+                                                </li>
+                                              )
+                                            ))
+                                          ) : (
+                                            <p className="text-sm text-slate-400 italic">Belum ada data indikator.</p>
+                                          )}
+                                      </ul>
+                                  </div>
+                                )}
+
+                                {/* 3. SIKLUS PERENCANAAN */}
+                                {data.isSiklusActive && (
+                                  <div className="space-y-5">
+                                      <div className="flex items-center gap-2 mb-2">
+                                          <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                              <TrendingUp className="text-indigo-500" size={20}/>
+                                              Siklus Perencanaan
+                                          </h3>
+                                      </div>
+                                      <div className="relative pl-6 border-l-2 border-slate-100 space-y-6">
+                                          {(data.siklusPerencanaan || []).length > 0 ? (
+                                            (data.siklusPerencanaan || []).map((step, idx) => (
+                                              <div key={idx} className="relative">
+                                                  {/* Logic Warna Dinamis dari Admin */}
+                                                  <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace(/ring-\w+-\d+/g, '').replace(/border-\w+-\d+/g, '').split(' ')[0]} ${getStepColor(step.color).match(/ring-\w+-\d+/)}`}>
+                                                      {step.step}
+                                                  </div>
+                                                  <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
+                                                  <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
+                                              </div>
+                                            ))
+                                          ) : (
+                                            <p className="text-sm text-slate-400 italic">Belum ada data siklus.</p>
+                                          )}
+                                      </div>
+                                  </div>
+                                )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </motion.div>
+                    )}
+
+                    {/* === TAB 2: AGENDA KEGIATAN === */}
+                    {activeTab === "agenda" && (
+                        <motion.div
+                        key="agenda"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-8"
+                      >
+                          <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
+                                <CalendarRange size={24} />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-800">Agenda & Jadwal Konsultasi</h3>
+                                <p className="text-sm text-slate-400">Jadwal konsultasi perencanaan dan agenda kegiatan program.</p>
+                            </div>
+                        </div>
+
+                        <div className="grid gap-4">
+                            {(data.agendaKegiatan || []).length > 0 ? (
+                              (data.agendaKegiatan || []).map((item, idx) => (
+                                <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'special' ? 'bg-amber-50/50 border-amber-100' : 'bg-white border-slate-100 hover:border-indigo-100'}`}>
+                                    <div className="flex items-center gap-4 mb-3 md:mb-0">
+                                        <div className={`p-3 rounded-xl ${item.status === 'special' ? 'bg-amber-100 text-amber-600' : 'bg-indigo-50 text-indigo-600'}`}>
+                                            <ClipboardList size={24} />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <h4 className="font-bold text-lg text-slate-800">{item.day}</h4>
+                                                {/* Badge Status Dinamis */}
+                                                {getStatusBadge(item.status)}
+                                            </div>
+                                            <div className="flex items-center gap-2 text-slate-700 font-bold mt-1">
+                                                <TrendingUp size={16} className="text-slate-400"/>
+                                                {item.activity}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col md:items-end gap-1 pl-14 md:pl-0">
+                                        {item.pic && (
+                                            <div className="text-sm text-slate-500 flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-full">
+                                                <User size={14} className="text-slate-400"/>
+                                                <span className="font-medium">PIC: {item.pic}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-center text-slate-400 italic py-10">Agenda belum dijadwalkan.</p>
+                            )}
+                        </div>
+                          {data.mapLink && (
+                           <a href={data.mapLink} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-indigo-600 font-medium cursor-pointer hover:underline mt-2">
+                              <MapPin size={16} /> Lihat Lokasi Rapat di Google Maps
+                           </a>
+                          )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            </motion.div>
+
+            {/* === KOLOM KANAN (Sidebar) === */}
+            <motion.div 
+               layout 
+               initial={{ opacity: 0, x: 20 }}
+               animate={{ opacity: 1, x: 0 }}
+               transition={{ duration: 0.8, delay: 0.5 }}
+               className="lg:w-1/3 flex flex-col gap-6 order-1 lg:order-2 lg:sticky lg:top-8 h-fit z-30 relative"
+            >
+              <AnimatePresence>
+                {isUpdating && <UpdatingOverlay />}
+              </AnimatePresence>
+
+              {/* 2. CTA BUTTON (Portal SIPD / E-Planning) - Dikontrol Admin */}
+              <AnimatePresence mode="popLayout">
+                {data.portalVisible && (
+                    <motion.div
+                        key="portal-button"
+                        layout 
+                        initial={{ opacity: 0, scale: 0.9, height: 0 }}
+                        animate={{ opacity: 1, scale: 1, height: "auto" }}
+                        exit={{ opacity: 0, scale: 0.9, height: 0 }}
+                        transition={{ duration: 0.4, ease: "easeInOut" }}
+                    >
+                      <a
+                        href={data.portalUrl || "#"} 
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group w-full py-5 bg-gradient-to-r from-teal-500 to-indigo-600 hover:from-teal-600 hover:to-indigo-700 text-white rounded-2xl font-bold text-center text-lg shadow-xl shadow-indigo-500/30 transition-all hover:-translate-y-1 flex items-center justify-center gap-3 relative overflow-hidden"
+                      >
+                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                        <Globe className="relative z-10" size={20}/>
+                        <span className="relative z-10">{data.portalLabel || "Akses SIPD / E-Planning"}</span>
+                        <ArrowRight className="group-hover:translate-x-1 transition-transform relative z-10" size={20} />
+                      </a>
+                    </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* 3. DOWNLOAD AREA (Templates) - Data dari Admin */}
+              <motion.div 
+                layout 
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                className="bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-slate-100 relative overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-indigo-400"></div>
+                <div className="mb-6">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                            <Download size={20} />
+                        </div>
+                        {data.downloadSectionTitle || "Template Dokumen"}
+                    </h3>
+                    {data.downloadSectionDesc && (
+                      <p className="text-sm text-slate-500 leading-relaxed">
+                          {data.downloadSectionDesc}
+                      </p>
+                    )}
+                </div>
+
+                <div className="space-y-4">
+                  {(data.downloads || []).length > 0 ? (
+                    (data.downloads || []).map((file, index) => (
+                      <a key={index} href={file.url} target="_blank" rel="noreferrer" className="flex items-center justify-between p-4 bg-slate-50 hover:bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group cursor-pointer">
+                        <div className="flex items-center gap-4 overflow-hidden">
+                          <div className="w-10 h-10 bg-white text-teal-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
+                            <FileText size={20} />
+                          </div>
+                          <span className="text-sm font-medium text-slate-700 truncate group-hover:text-indigo-700 transition">
+                            {file.name}
+                          </span>
+                        </div>
+                        <Download size={18} className="text-slate-400 group-hover:text-indigo-600 shrink-0 transition" />
+                      </a>
+                    ))
+                  ) : (
+                      <div className="py-6 text-center px-4">
+                        <p className="text-sm text-slate-500 italic font-medium">
+                            Belum ada dokumen template.
+                        </p>
+                      </div>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* 4. CONTACT CARD - Konfigurasi dari Admin */}
+              <motion.div 
+                layout 
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                className="bg-[#0f172a] text-white rounded-3xl shadow-xl p-8 relative overflow-hidden group"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl translate-x-10 -translate-y-10 group-hover:bg-indigo-500/30 transition-colors"></div>
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-teal-500/20 rounded-full blur-3xl -translate-x-10 translate-y-10"></div>
+                
+                <div className="relative z-10 mb-8">
+                    <h3 className="font-bold mb-4 flex items-center gap-3 text-white">
+                        <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
+                            <ContactIcon className="text-yellow-400" size={20} />
+                        </div>
+                        {data.contactSectionTitle || "Konsultasi Program"}
+                    </h3>
+                    <p className="text-sm text-slate-400 leading-relaxed">
+                        {data.contactSectionDesc || "Hubungi tim perencanaan untuk asistensi penyusunan."}
+                    </p>
+                </div>
+
+                <div className="relative z-10 space-y-3">
+                  {(data.contacts || []).length > 0 ? (
+                      (data.contacts || []).map((contact, i) => (
+                        <div key={i} className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-colors backdrop-blur-md">
+                            <div className="bg-yellow-400 p-2.5 rounded-full text-slate-900 shadow-lg shadow-yellow-400/20">
+                            <ContactIcon size={18} />
+                            </div>
+                            <div>
+                            <p className="text-[10px] text-yellow-200 uppercase font-bold tracking-wider mb-0.5">
+                                {contact.name || "Perencana"}
+                            </p>
+                            <p className="font-bold text-lg tracking-wide">
+                                {contact.number}
+                            </p>
+                            </div>
+                        </div>
+                      ))
+                  ) : (
+                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
+                        Kontak belum tersedia.
+                      </div>
+                  )}
+                </div>
+              </motion.div>
+
+            </motion.div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -7,6 +7,10 @@
  */
 export function extractFirstImage(html: string | null): string | null {
   if (!html) return null;
-  const match = html.match(/<img[^>]+src="([^">]+)"/);
-  return match ? match[1] : null;
+
+  const div = document.createElement("div");
+  div.innerHTML = html;
+
+  const img = div.querySelector("img");
+  return img?.src || null;
 }

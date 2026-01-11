@@ -28,9 +28,7 @@ class CreateBeritasTable extends Migration
 
         $table->string('kategori')->nullable();
         $table->boolean('highlight')->default(false);
-
-        $table->enum('status', ['draft', 'publik'])->default('draft');
-        $table->datetime('jadwal')->nullable();
+        $table->date('jadwal')->nullable();
 
         $table->text('tags')->nullable(); // lebih aman untuk banyak tag
 
