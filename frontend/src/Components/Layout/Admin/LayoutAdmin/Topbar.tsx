@@ -1,9 +1,9 @@
 import React, { useContext } from "react";
 import { Search } from "lucide-react"; 
-import ThemeToggle from "../../../../pages/Admin/components/theme/ThemeToggle";
-import ProfileMenu from "../../../../pages/Admin/components/profil/ProfilMenu";
-import { ThemeContextAdmin } from "../../../../pages/Admin/components/theme/ThemeContextAdmin";
-import Notification from "../../../../feature/notif/notification";
+import ThemeToggle from "../../../../pages/Admin/Components/theme/ThemeToggle.tsx";
+import ProfileMenu from "../../../../pages/Admin/Components/profil/ProfilMenu.tsx";
+import { ThemeContextAdmin } from "../../../../pages/Admin/Components/theme/ThemeContextAdmin.tsx";
+import Notification from "../../../../feature/notif/notification.tsx";
 
 interface TopbarProps {
   setActiveMenu?: (menu: string) => void;

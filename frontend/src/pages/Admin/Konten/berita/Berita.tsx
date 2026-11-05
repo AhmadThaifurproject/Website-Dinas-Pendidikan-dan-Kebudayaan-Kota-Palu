@@ -9,7 +9,7 @@ import ReactQuill from 'react-quill';
 import DOMPurify from 'dompurify';
 import { extractFirstImage } from "../../../../utils/helper.ts"; 
 import UploadToHighlight from "../../../../feature/highlight/UploadToHighlight.tsx"; 
-import { getViewBadge } from "../../../../components/Helper/viewBadge.ts"; 
+import { getViewBadge } from "../../../../Components/Helper/viewBadge.ts"; 
 import { 
   User, Calendar, Hash, Image as ImageIcon, 
   Search, Filter, Trash2, Type, PenTool, FolderTree, 
@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 // --- IMPORT THEME CONTEXT ---
-import { ThemeContextAdmin } from "../../components/theme/ThemeContextAdmin.tsx"; 
+import { ThemeContextAdmin } from "../../Components/theme/ThemeContextAdmin.tsx"; 
 
 // --- KONFIGURASI API (DINAMIS) ---
 const API_BASE_URL = import.meta.env.VITE_API_URL;

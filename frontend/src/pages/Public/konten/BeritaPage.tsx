@@ -45,7 +45,7 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-// --- COMPONENTS ---
+// --- Components ---
 
 const HeroBanner: React.FC<{ onSearch: (val: string) => void }> = ({ onSearch }) => {
   return (

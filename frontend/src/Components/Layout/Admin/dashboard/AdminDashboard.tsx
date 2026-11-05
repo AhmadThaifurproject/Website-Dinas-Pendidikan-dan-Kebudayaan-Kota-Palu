@@ -1,37 +1,37 @@
 import React, { useState, useEffect } from "react";
 import axios from 'axios';
-import { ThemeContextAdmin } from "../../../../pages/Admin/components/theme/ThemeContextAdmin";
+import { ThemeContextAdmin } from "../../../../pages/Admin/Components/theme/ThemeContextAdmin.tsx";
 import { useNavigate } from "react-router-dom"; 
 import { AlertTriangle, Lock, Menu } from "lucide-react";
 
 // Import Layout Components
-import Sidebar from "../LayoutAdmin/Sidebar";
-import Topbar from "../LayoutAdmin/Topbar";
+import Sidebar from "../LayoutAdmin/Sidebar.tsx";
+import Topbar from "../LayoutAdmin/Topbar.tsx";
 
 // Import Content Components
-import Berita from "../../../../pages/Admin/Konten/berita/Berita";
-import FormInputData from "../../../../pages/Admin/Konten/layanan/smp/FormInputDataSmp";
-import FormInputDataPaud from "../../../../pages/Admin/Konten/layanan/paud/FormInputDataPaud";
-import FormInputDataSD from "../../../../pages/Admin/Konten/layanan/sd/FormInputDataSD";
-import FormInputDataKepegawaian from "../../../../pages/Admin/Konten/layanan/kepeegawaian/FormInputDataKepegawaian";
-import FormInputDataPerencanaan from "../../../../pages/Admin/Konten/layanan/perencanaan/FormInputDataPerencanaan";
-import FormInputDataAsetDanKeuangan from "../../../../pages/Admin/Konten/layanan/aset-keuangan/FormInputDataAsetDanKeuangan";
-import Pengaturan from "../../../../pages/Admin/pengaturan/Pengaturan";
-import FormInputDataKetenagaan from "../../../../pages/Admin/Konten/layanan/ketenagaan/FormInputDataKetenagaan";
-import FormInputDataKebudayaan from "../../../../pages/Admin/Konten/layanan/kebudayaan/FormInputDataKebudayaan";
-import FormInputDataSubSekretariat from "../../../../pages/Admin/Konten/layanan/sub-sekretariat/FormInputDataSubSekretariat";
-import AgendaControl from "../../../../pages/Admin/Konten/Poster/AgendaControll"; 
-import KontrolPanelKalender from "../../../../pages/Admin/Konten/Kalender/KontrolPanelKalender";
-import ControllPageProfile from "../../../../pages/Admin/Konten/Profil Pejabat/ControllPageProfile";
-import ProfilAvatar from "../../../../pages/Admin/components/profil/components/ProfilAvatar"; 
-import ChangePassword from "../../../../pages/Admin/components/profil/components/ChangePassword";
+import Berita from "../../../../pages/Admin/Konten/berita/Berita.tsx";
+import FormInputData from "../../../../pages/Admin/Konten/layanan/smp/FormInputDataSmp.tsx";
+import FormInputDataPaud from "../../../../pages/Admin/Konten/layanan/paud/FormInputDataPaud.tsx";
+import FormInputDataSD from "../../../../pages/Admin/Konten/layanan/sd/FormInputDataSD.tsx";
+import FormInputDataKepegawaian from "../../../../pages/Admin/Konten/layanan/kepeegawaian/FormInputDataKepegawaian.tsx";
+import FormInputDataPerencanaan from "../../../../pages/Admin/Konten/layanan/perencanaan/FormInputDataPerencanaan.tsx";
+import FormInputDataAsetDanKeuangan from "../../../../pages/Admin/Konten/layanan/aset-keuangan/FormInputDataAsetDanKeuangan.tsx";
+import Pengaturan from "../../../../pages/Admin/pengaturan/Pengaturan.tsx";
+import FormInputDataKetenagaan from "../../../../pages/Admin/Konten/layanan/ketenagaan/FormInputDataKetenagaan.tsx";
+import FormInputDataKebudayaan from "../../../../pages/Admin/Konten/layanan/kebudayaan/FormInputDataKebudayaan.tsx";
+import FormInputDataSubSekretariat from "../../../../pages/Admin/Konten/layanan/sub-sekretariat/FormInputDataSubSekretariat.tsx";
+import AgendaControl from "../../../../pages/Admin/Konten/Poster/AgendaControll.tsx"; 
+import KontrolPanelKalender from "../../../../pages/Admin/Konten/Kalender/KontrolPanelKalender.tsx";
+import ControllPageProfile from "../../../../pages/Admin/Konten/Profil Pejabat/ControllPageProfile.tsx";
+import ProfilAvatar from "../../../../pages/Admin/Components/profil/Components/ProfilAvatar.tsx"; 
+import ChangePassword from "../../../../pages/Admin/Components/profil/Components/ChangePassword.tsx";
 
 // --- IMPORT KHUSUS SUPER ADMIN ---
-import PanelKontrolLayanan from "../../../../pages/SuperAdmin/Panel_Kontrol/PanelKontrolLayanan";
-import TrackingActivity from "../../../../pages/SuperAdmin/Panel_Kontrol/TrackingActivity"; 
+import PanelKontrolLayanan from "../../../../pages/SuperAdmin/Panel_Kontrol/PanelKontrolLayanan.tsx";
+import TrackingActivity from "../../../../pages/SuperAdmin/Panel_Kontrol/TrackingActivity.tsx"; 
 
 // ✅ FIX: Import Komponen Floating Chat untuk Admin
-import ChatHelp from "../../../../pages/Admin/components/feature/bubblechat/ChatHelp";
+import ChatHelp from "../../../../pages/Admin/Components/feature/bubblechat/ChatHelp.tsx";
 
 export default function DashboardAdmin() {
   const navigate = useNavigate();

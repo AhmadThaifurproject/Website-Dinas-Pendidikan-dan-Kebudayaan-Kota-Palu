@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import axios from 'axios';
-import NotFound from '../../feature/auth/features/NotFound';
+import NotFound from '../../feature/auth/features/NotFound.tsx';
 
 const StealthRoute: React.FC = () => {
   const [isVerified, setIsVerified] = useState<boolean | null>(null);

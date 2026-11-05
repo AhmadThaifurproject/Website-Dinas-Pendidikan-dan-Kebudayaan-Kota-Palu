@@ -12,8 +12,8 @@ import {
   Hash, MessageCircle, Mail, HelpCircle, Lock // <-- Tambahan Icon Lock
 } from "lucide-react";
 
-import DuplicateFileAlert from "../../../../../components/Feedback/DuplicateFileAlert.tsx";
-import { ThemeContextAdmin } from "../../../components/theme/ThemeContextAdmin.tsx"; 
+import DuplicateFileAlert from "../../../../../Components/Feedback/DuplicateFileAlert.tsx";
+import { ThemeContextAdmin } from "../../../Components/theme/ThemeContextAdmin.tsx"; 
 
 // --- KONFIGURASI API (DINAMIS) ---
 const BASE_URL = import.meta.env.VITE_API_URL;

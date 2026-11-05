@@ -12,8 +12,8 @@ import {
   CreditCard, PieChart, CheckCheck, Mail, MessageCircle, HelpCircle, Lock 
 } from "lucide-react";
 
-import DuplicateFileAlert from "../../../../../components/Feedback/DuplicateFileAlert.tsx";
-import { ThemeContextAdmin } from "../../../components/theme/ThemeContextAdmin.tsx";
+import DuplicateFileAlert from "../../../../../Components/Feedback/DuplicateFileAlert.tsx";
+import { ThemeContextAdmin } from "../../../Components/theme/ThemeContextAdmin.tsx";
 
 // --- KONFIGURASI API (DINAMIS) ---
 const API_CATEGORY_SLUG = "asetdankeuangan"; 

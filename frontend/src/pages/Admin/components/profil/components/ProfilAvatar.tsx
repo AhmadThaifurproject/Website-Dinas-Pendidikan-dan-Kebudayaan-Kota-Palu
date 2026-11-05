@@ -1,4 +1,4 @@
-// src/pages/Admin/components/profil/components/ProfilAvatar.tsx
+// src/pages/Admin/Components/profil/Components/ProfilAvatar.tsx
 
 import React, { useState, useEffect, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';

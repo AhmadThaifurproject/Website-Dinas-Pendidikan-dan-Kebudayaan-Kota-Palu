@@ -12,8 +12,8 @@ import {
 } from "lucide-react";
 
 // --- IMPORT COMPONENT ---
-import DuplicateFileAlert from "../../../../../components/Feedback/DuplicateFileAlert.tsx";
-import { ThemeContextAdmin } from "../../../components/theme/ThemeContextAdmin.tsx"; 
+import DuplicateFileAlert from "../../../../../Components/Feedback/DuplicateFileAlert.tsx";
+import { ThemeContextAdmin } from "../../../Components/theme/ThemeContextAdmin.tsx"; 
 
 // --- TYPE DEFINITIONS ---
 type FormInputDataProps = {

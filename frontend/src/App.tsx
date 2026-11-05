@@ -4,11 +4,11 @@ import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 
 // --- Systems ---
 import NotFound from './feature/auth/features/NotFound.tsx';
-import StealthRoute from './components/Feedback/StealthRoute.tsx';
+import StealthRoute from './Components/Feedback/StealthRoute.tsx';
 
 
-// --- COMPONENTS & LAYOUT ---
-import PublicLayout from "@/components/Layout/PublicLayout";
+// --- Components & LAYOUT ---
+import PublicLayout from "@/Components/Layout/PublicLayout";
 
 // --- HOMEPAGE  ---
 import HomePage from "./pages/Public/Home/homepage.tsx"; 
@@ -17,8 +17,8 @@ import HomePage from "./pages/Public/Home/homepage.tsx";
 import Login from "./feature/auth/loginpage.tsx";
 
 // --- Profil Admin ---
-import ProfilAvatar from "./pages/Admin/components/profil/components/ProfilAvatar.tsx";
-import ChangePassword from "./pages/Admin/components/profil/components/ChangePassword.tsx";
+import ProfilAvatar from "./pages/Admin/Components/profil/Components/ProfilAvatar.tsx";
+import ChangePassword from "./pages/Admin/Components/profil/Components/ChangePassword.tsx";
 
 // --- PAGES: PUBLIC (PROFIL) ---
 import ProfilePage from "./pages/Public/konten/Profil/ProfilePage.tsx";
