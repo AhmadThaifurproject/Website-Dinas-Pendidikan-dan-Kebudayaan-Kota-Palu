@@ -4,7 +4,7 @@ import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 
 // --- Systems ---
 import NotFound from './feature/auth/features/NotFound';
-import StealthRoute from './components/Feedback/StealthRoute';
+import StealthRoute from './Components/Feedback/StealthRoute';
 
 
 // --- COMPONENTS & LAYOUT ---
