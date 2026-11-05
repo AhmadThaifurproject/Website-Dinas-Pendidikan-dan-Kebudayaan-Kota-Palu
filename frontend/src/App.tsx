@@ -40,7 +40,7 @@ import AsetKeuanganPage from "./pages/Public/layanan/LayananAsetKeuanganPage.tsx
 import BeritaPage from "./pages/Public/konten/BeritaPage.tsx";
 
 // --- PAGES: ADMIN ---
-import AdminDashboard from "./components/Layout/Admin/dashboard/AdminDashboard.tsx";
+import AdminDashboard from "./Components/Layout/Admin/dashboard/AdminDashboard.tsx";
 import Berita from "./pages/Admin/Konten/berita/Berita.tsx";
 import DetailBerita from "./pages/Admin/Konten/berita/DetailBerita.tsx";
 
