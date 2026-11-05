@@ -11,8 +11,8 @@ import {
   School, User, Settings, Database, ExternalLink, Lock 
 } from "lucide-react";
 
-import DuplicateFileAlert from "../../../../../components/Feedback/DuplicateFileAlert";
-import { ThemeContextAdmin } from "../../../components/theme/ThemeContextAdmin"; 
+import DuplicateFileAlert from "../../../../../components/Feedback/DuplicateFileAlert.tsx";
+import { ThemeContextAdmin } from "../../../components/theme/ThemeContextAdmin.tsx"; 
 
 type FormInputDataProps = {
   selectedCategory: string; 

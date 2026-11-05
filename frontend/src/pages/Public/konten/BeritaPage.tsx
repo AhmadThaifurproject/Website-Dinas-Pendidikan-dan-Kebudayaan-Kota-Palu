@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { Calendar, User, Search, ArrowRight, Eye } from "react-feather";
 import { Link } from 'react-router-dom';
-import { extractFirstImage } from "../../../utils/helper"; 
+import { extractFirstImage } from "../../../utils/helper.ts"; 
 
 // --- KONFIGURASI API ---
 const API_BASE_URL = import.meta.env.VITE_API_URL;

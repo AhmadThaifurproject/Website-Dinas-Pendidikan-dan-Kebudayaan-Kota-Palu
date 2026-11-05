@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
 import { User, KeyRound, LogOut, ChevronDown, ShieldCheck } from "lucide-react";
-import { ThemeContextAdmin } from "../../../Admin/components/theme/ThemeContextAdmin";
+import { ThemeContextAdmin } from "../theme/ThemeContextAdmin.tsx";
 
 interface ProfileMenuProps {
   setActiveMenu?: (menu: string) => void;

@@ -12,8 +12,8 @@ import {
   MessageCircle, Mail, HelpCircle, Landmark, Search, Camera, Lock
 } from "lucide-react";
 
-import DuplicateFileAlert from "../../../../../components/Feedback/DuplicateFileAlert";
-import { ThemeContextAdmin } from "../../../components/theme/ThemeContextAdmin"; 
+import DuplicateFileAlert from "../../../../../components/Feedback/DuplicateFileAlert.tsx";
+import { ThemeContextAdmin } from "../../../components/theme/ThemeContextAdmin.tsx"; 
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 const API_CATEGORY_SLUG = "kebudayaan"; 

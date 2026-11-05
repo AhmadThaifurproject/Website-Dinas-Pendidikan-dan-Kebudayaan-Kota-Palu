@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { Moon, Sun } from "lucide-react";
-import { ThemeContextAdmin } from "./ThemeContextAdmin";
+import { ThemeContextAdmin } from "./ThemeContextAdmin.tsx";
 
 export default function ThemeToggle() {
   const context = useContext(ThemeContextAdmin);

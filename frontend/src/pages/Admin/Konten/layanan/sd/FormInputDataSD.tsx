@@ -12,10 +12,10 @@ import {
 } from "lucide-react";
 
 // --- IMPORT COMPONENT ---
-import DuplicateFileAlert from "../../../../../components/Feedback/DuplicateFileAlert";
+import DuplicateFileAlert from "../../../../../components/Feedback/DuplicateFileAlert.tsx";
 
 // --- PERUBAHAN IMPORT TEMA ---
-import { ThemeContextAdmin } from "../../../components/theme/ThemeContextAdmin"; 
+import { ThemeContextAdmin } from "../../../components/theme/ThemeContextAdmin.tsx"; 
 
 // --- TYPE DEFINITIONS ---
 type FormInputDataProps = {

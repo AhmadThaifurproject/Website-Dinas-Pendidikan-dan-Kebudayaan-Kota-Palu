@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 
 // --- IMPORT THEME CONTEXT ---
-import { ThemeContextAdmin } from "../../theme/ThemeContextAdmin";
+import { ThemeContextAdmin } from "../../theme/ThemeContextAdmin.tsx";
 
 interface ProfileAvatarProps {
   avatarUrl?: string;

@@ -7,9 +7,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import "react-quill/dist/quill.snow.css";
 import ReactQuill from 'react-quill';
 import DOMPurify from 'dompurify';
-import { extractFirstImage } from "../../../../utils/helper"; 
-import UploadToHighlight from "../../../../feature/highlight/UploadToHighlight"; 
-import { getViewBadge } from "../../../../components/Helper/viewBadge"; 
+import { extractFirstImage } from "../../../../utils/helper.ts"; 
+import UploadToHighlight from "../../../../feature/highlight/UploadToHighlight.tsx"; 
+import { getViewBadge } from "../../../../components/Helper/viewBadge.ts"; 
 import { 
   User, Calendar, Hash, Image as ImageIcon, 
   Search, Filter, Trash2, Type, PenTool, FolderTree, 
@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 // --- IMPORT THEME CONTEXT ---
-import { ThemeContextAdmin } from "../../components/theme/ThemeContextAdmin"; 
+import { ThemeContextAdmin } from "../../components/theme/ThemeContextAdmin.tsx"; 
 
 // --- KONFIGURASI API (DINAMIS) ---
 const API_BASE_URL = import.meta.env.VITE_API_URL;

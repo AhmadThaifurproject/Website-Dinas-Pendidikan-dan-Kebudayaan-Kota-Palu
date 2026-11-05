@@ -3,22 +3,22 @@ import React, { useState } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 
 // --- Systems ---
-import NotFound from './feature/auth/features/NotFound';
-import StealthRoute from './Components/Feedback/StealthRoute';
+import NotFound from './feature/auth/features/NotFound.tsx';
+import StealthRoute from './components/Feedback/StealthRoute.tsx';
 
 
 // --- COMPONENTS & LAYOUT ---
 import PublicLayout from "@/components/Layout/PublicLayout";
 
 // --- HOMEPAGE  ---
-import HomePage from "./pages/Public/Home/homepage"; 
+import HomePage from "./pages/Public/Home/homepage.tsx"; 
 
 // --- AUTH ---
 import Login from "./feature/auth/loginpage.tsx";
 
 // --- Profil Admin ---
-import ProfilAvatar from "./pages/Admin/components/profil/components/ProfilAvatar";
-import ChangePassword from "./pages/Admin/components/profil/components/ChangePassword";
+import ProfilAvatar from "./pages/Admin/components/profil/components/ProfilAvatar.tsx";
+import ChangePassword from "./pages/Admin/components/profil/components/ChangePassword.tsx";
 
 // --- PAGES: PUBLIC (PROFIL) ---
 import ProfilePage from "./pages/Public/konten/Profil/ProfilePage.tsx";

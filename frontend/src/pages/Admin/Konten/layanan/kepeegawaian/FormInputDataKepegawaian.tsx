@@ -13,10 +13,10 @@ import {
 } from "lucide-react";
 
 // --- IMPORT COMPONENT ---
-import DuplicateFileAlert from "../../../../../components/Feedback/DuplicateFileAlert";
+import DuplicateFileAlert from "../../../../../components/Feedback/DuplicateFileAlert.tsx";
 
 // --- IMPORT CONTEXT TEMA ---
-import { ThemeContextAdmin } from "../../../components/theme/ThemeContextAdmin"; 
+import { ThemeContextAdmin } from "../../../components/theme/ThemeContextAdmin.tsx"; 
 
 // --- KONFIGURASI API ---
 const BASE_URL = import.meta.env.VITE_API_URL;

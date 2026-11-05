@@ -12,8 +12,8 @@ import {
 } from 'lucide-react';
 
 // --- IMPORT THEME & FLOATING CHAT COMPONENT ---
-import { ThemeContextAdmin } from "../../Admin/components/theme/ThemeContextAdmin";
-import FloatingChat from "../../../feature/chat/FloatingChat"; 
+import { ThemeContextAdmin } from "../../Admin/components/theme/ThemeContextAdmin.tsx";
+import FloatingChat from "../../../feature/chat/FloatingChat.tsx"; 
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 

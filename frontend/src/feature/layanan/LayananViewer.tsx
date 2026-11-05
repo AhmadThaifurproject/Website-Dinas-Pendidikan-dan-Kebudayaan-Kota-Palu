@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import FilePreview from "./FilePreview";
+import FilePreview from "./FilePreview.tsx";
 
 // --- KONFIGURASI API (DINAMIS) ---
 const API_BASE_URL = import.meta.env.VITE_API_URL;

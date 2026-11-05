@@ -6,7 +6,7 @@ import {
   MessageCircle, X, SendHorizontal, Paperclip, 
   Headset, CheckCheck, CircleDot
 } from 'lucide-react';
-import { ThemeContextAdmin } from "../../theme/ThemeContextAdmin";
+import { ThemeContextAdmin } from "../../theme/ThemeContextAdmin.tsx";
 
 export default function ChatHelp() {
   const context = useContext(ThemeContextAdmin) as any;

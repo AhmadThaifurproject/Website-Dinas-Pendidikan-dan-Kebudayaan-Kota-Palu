@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import LayananViewer from "../../../../../feature/layanan/LayananViewer"; 
+import LayananViewer from "../../../../../feature/layanan/LayananViewer.tsx"; 
 import {
   FileText,       // Icon Utama
   Scale,          // Untuk Dasar Hukum
