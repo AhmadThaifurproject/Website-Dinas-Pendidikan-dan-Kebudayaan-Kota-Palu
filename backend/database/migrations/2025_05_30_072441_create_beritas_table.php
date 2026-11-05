@@ -19,7 +19,7 @@ class CreateBeritasTable extends Migration
         $table->string('judul');
         $table->string('slug')->unique();
         
-        $table->text('isi_berita');
+        $table->longText('isi_berita');
         $table->string('gambar')->nullable();
         $table->string('penulis');
 

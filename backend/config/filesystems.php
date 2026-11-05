@@ -7,24 +7,20 @@ return [
     | Default Filesystem Disk
     |--------------------------------------------------------------------------
     |
-    | Here you may specify the default filesystem disk that should be used
-    | by the framework. The "local" disk, as well as a variety of cloud
-    | based disks are available to your application for file storage.
+    | Setting default penyimpanan. Kita arahkan ke 'public' agar file
+    | bisa diakses dari browser. Pastikan di .env isinya:
+    | FILESYSTEM_DISK=public
     |
     */
 
-    'default' => env('FILESYSTEM_DISK', 'local'),
+    'default' => env('FILESYSTEM_DISK', 'public'),
 
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |
-    | Below you may configure as many filesystem disks as necessary, and you
-    | may even configure multiple disks for the same driver. Examples for
-    | most supported storage drivers are configured here for reference.
-    |
-    | Supported drivers: "local", "ftp", "sftp", "s3"
+    | Konfigurasi driver penyimpanan. Fokus utama kita ada di disk 'public'.
     |
     */
 
@@ -32,16 +28,17 @@ return [
 
         'local' => [
             'driver' => 'local',
-            'root' => storage_path('app/private'),
+            'root' => storage_path('app/private'), // Folder aman (tidak bisa diakses browser)
             'serve' => true,
             'throw' => false,
             'report' => false,
         ],
 
+        // ✅ INI DISK UTAMA UNTUK HOSTINGER (LOCAL STORAGE)
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            'root' => storage_path('app/public'), // Lokasi fisik: storage/app/public
+            'url' => env('APP_URL').'/storage',   // URL akses: https://api.domain.com/storage
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
@@ -60,17 +57,6 @@ return [
             'report' => false,
         ],
 
-        'minio' => [
-            'driver' => 's3',
-            'key' => env('MINIO_ACCESS_KEY'),
-            'secret' => env('MINIO_SECRET_KEY'),
-            'region' => env('MINIO_REGION', 'us-east-1'),
-            'bucket' => env('MINIO_BUCKET'),
-            'endpoint' => env('MINIO_ENDPOINT'),
-            'use_path_style_endpoint' => true,
-            'url' => env('MINIO_URL'), // untuk Storage::disk('minio')->url()
-        ],
-
     ],
 
     /*
@@ -78,9 +64,8 @@ return [
     | Symbolic Links
     |--------------------------------------------------------------------------
     |
-    | Here you may configure the symbolic links that will be created when the
-    | `storage:link` Artisan command is executed. The array keys should be
-    | the locations of the links and the values should be their targets.
+    | Ini adalah peta untuk perintah "php artisan storage:link" atau
+    | route "/linkstorage" yang sudah kita buat.
     |
     */
 

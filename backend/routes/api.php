@@ -1,72 +1,139 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\BeritaController;
-use App\Http\Controllers\UploadController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\Api\PengaduanMasyarakatController;
-use App\Http\Controllers\LayananController;
+use App\Http\Controllers\BeritaController;
 use App\Http\Controllers\Api\AgendaController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\KalenderController; 
+use App\Http\Controllers\UserController; // <-- Ini sudah ter-import dengan benar
+use App\Http\Controllers\UploadController;
+use App\Http\Controllers\LayananController;
+use App\Http\Controllers\Api\PengaduanMasyarakatController;
+use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\FeatureLockTeknisiController; // <-- IMPORT BARU DITAMBAHKAN DI SINI
 
-// ====================== AUTH ======================
-Route::post('/admin/login', [AuthController::class, 'login']);
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/admin/logout', [AuthController::class, 'logout']);
-    Route::get('/user', [AuthController::class, 'me']);
+/*
+|--------------------------------------------------------------------------
+| AUTH (PUBLIC)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('auth')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register']); 
 });
 
-// ====================== BERITA ======================
-Route::prefix('berita')->group(function () {
-    // CRUD
-    Route::get('/', [BeritaController::class, 'index']);                    // list semua berita
-    Route::post('/', [BeritaController::class, 'store']);                   // tambah berita
-    Route::get('/slug/{slug}', [BeritaController::class, 'showBySlug']);   // detail berita
-    Route::put('/{slug}', [BeritaController::class, 'update']);             // update berita
-    Route::delete('/{slug}', [BeritaController::class, 'destroy']);         // hapus berita
+/*
+|--------------------------------------------------------------------------
+| PUBLIC API (READ ONLY)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('public')->group(function () {
 
-    // Highlight
-    Route::post('/set-highlight', [BeritaController::class, 'setHighlight']);
-    Route::get('/highlight', [BeritaController::class, 'highlight']);
+    // BERITA
+    Route::get('/berita', [BeritaController::class, 'index']);
+    Route::get('/berita/{slug}', [BeritaController::class, 'showBySlug']);
+    Route::get('/berita-highlight', [BeritaController::class, 'highlight']);
 
-    // Upload gambar editor (MinIO)
-  Route::post('/upload-editor-image', [BeritaController::class, 'uploadEditorImage']);
+    Route::get('/agenda', [AgendaController::class, 'index']);
 
+    // --- KALENDER PUBLIC (READ ONLY) ---
+    Route::get('/kalenders', [KalenderController::class, 'index']); 
+
+    // PROFIL PEJABAT (PUBLIC READ)
+    Route::get('/profiles', [ProfileController::class, 'index']);
+
+    // LAYANAN (READ)
+    Route::get('{bidang}/content/{layanan}', [LayananController::class, 'show']);
+    Route::get('{bidang}/upload/{layanan}', [UploadController::class, 'getFiles']);
+
+    // PENGADUAN (HANYA KIRIM)
+    Route::post('/pengaduan', [PengaduanMasyarakatController::class, 'store']);
 });
 
-// ====================== UPLOAD DINAMIS (MinIO) ======================
-Route::prefix('{bidang}/upload/{layanan}')->group(function () {
-    Route::post('/', [UploadController::class, 'upload']);          // upload file
-    Route::get('/', [UploadController::class, 'getFiles']);        // list file
-    Route::delete('/{filename}', [UploadController::class, 'deleteFile']); // hapus file
-});
+/*
+|--------------------------------------------------------------------------
+| ADMIN API (PROTECTED — ABSOLUT)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 
+    /*
+    | AUTH SESSION
+    */
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', [AuthController::class, 'me']);
 
-// ====================== UPLOAD DINAMIS (MinIO) ======================
-Route::prefix('{bidang}/content/{layanan}')->group(function () {
-    Route::get('/', [LayananController::class, 'show']);   // Ambil data JSON (Public)
-    Route::post('/', [LayananController::class, 'store']); // Simpan data JSON (Admin)
-});
+    /*
+    | MANAJEMEN USER / ADMIN (SUPER ADMIN / TEKNISI)
+    */
+    // Endpoint ini akan menjadi: /api/admin/users
+    Route::get('/users', [UserController::class, 'index']); 
 
-// ====================== PENGADUAN MASYARAKAT ======================
-Route::prefix('pengaduan')->group(function () {
-    Route::post('/', [PengaduanMasyarakatController::class, 'store']);
-    Route::get('/', [PengaduanMasyarakatController::class, 'index']); // untuk admin
-    Route::get('/{id}', [PengaduanMasyarakatController::class, 'show']);
-    Route::put('/{id}/tanggapan', [PengaduanMasyarakatController::class, 'tanggapi']);
-});
+    /*
+    | MANAJEMEN GEMBOK FITUR EDITOR (DARI TEKNISI KE ADMIN)
+    */
+    Route::get('/feature-lock-teknisi', [FeatureLockTeknisiController::class, 'index']); // <--- ROUTE BARU
+    Route::post('/feature-lock-teknisi/toggle', [FeatureLockTeknisiController::class, 'toggle']); // <--- ROUTE BARU
 
+    // --- KALENDER ADMIN (FULL CRUD) ---
+    Route::prefix('kalenders')->group(function () { 
+        Route::get('/', [KalenderController::class, 'index']);
+        Route::post('/', [KalenderController::class, 'store']);
+        
+        // Menggunakan match agar bisa terima update file (POST dengan _method PUT)
+        Route::match(['put', 'post'], '/{id}', [KalenderController::class, 'update']); 
+        
+        Route::delete('/{id}', [KalenderController::class, 'destroy']);
+    });
 
-// ====================== AGENDA/POSTER ======================
-Route::get('/agenda', [AgendaController::class, 'index']); // Load Data
-Route::match(['put', 'post'], '/agenda', [AgendaController::class, 'update']);
-Route::post('/fetch-metadata', [AgendaController::class, 'fetchUrlInfo']);
+    /*
+    | BERITA (FULL CONTROL)
+    */
+    Route::prefix('berita')->group(function () {
+        Route::post('/', [BeritaController::class, 'store']);
+        Route::put('/{slug}', [BeritaController::class, 'update']);
+        Route::delete('/{slug}', [BeritaController::class, 'destroy']);
+        Route::post('/set-highlight', [BeritaController::class, 'setHighlight']);
+        Route::post('/upload-editor-image', [BeritaController::class, 'uploadEditorImage']);
+    });
 
+    /*
+    | PROFIL PEJABAT (ADMIN CONTROL)
+    */
+    Route::prefix('profiles')->group(function () {
+        Route::post('/', [ProfileController::class, 'store']);
+        Route::match(['put', 'post'], '/{id}', [ProfileController::class, 'update']); 
+        Route::delete('/{id}', [ProfileController::class, 'destroy']);
+    });
 
-// ====================== TEST CORS ======================
-Route::get('/test-cors', function () {
-    return response()->json(['message' => 'CORS aktif!'])
-        ->header('Access-Control-Allow-Origin', 'http://localhost:5173')
-        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    /*
+    | AGENDA (ADMIN ONLY) - Ini agenda poster lama Anda
+    */
+    Route::get('/agenda', [AgendaController::class, 'index']);
+    Route::post('/agenda', [AgendaController::class, 'store']);
+    Route::put('/agenda/{id}', [AgendaController::class, 'update']);
+    Route::delete('/agenda/{id}', [AgendaController::class, 'destroy']);
+
+    /*
+    | LAYANAN (WRITE)
+    */
+    Route::post('{bidang}/content/{layanan}', [LayananController::class, 'store']);
+
+    /*
+    | UPLOAD FILE (ADMIN ONLY)
+    */
+    Route::prefix('{bidang}/upload/{layanan}')->group(function () {
+        Route::post('/', [UploadController::class, 'upload']);
+        Route::get('/', [UploadController::class, 'getFiles']);
+        Route::delete('/{filename}', [UploadController::class, 'deleteFile']);
+    });
+
+    /*
+    | PENGADUAN (ADMIN VIEW & RESPONSE)
+    */
+    Route::prefix('pengaduan')->group(function () {
+        Route::get('/', [PengaduanMasyarakatController::class, 'index']);
+        Route::get('/{id}', [PengaduanMasyarakatController::class, 'show']);
+        Route::put('/{id}/tanggapan', [PengaduanMasyarakatController::class, 'tanggapi']);
+    });
 });

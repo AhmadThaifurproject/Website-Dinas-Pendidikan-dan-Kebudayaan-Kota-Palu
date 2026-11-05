@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api; 
 
-use App\Http\Controllers\Controller; 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -12,17 +12,19 @@ use App\Models\AgendaItem;
 
 class AgendaController extends Controller
 {
-    // --- 1. FUNGSI UNTUK MENGAMBIL METADATA URL (Baru Ditambahkan) ---
+    // =================================================================
+    // 1. FETCH METADATA (UNTUK PREVIEW LINK)
+    // =================================================================
     public function fetchUrlInfo(Request $request)
     {
         $url = $request->input('url');
 
         if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
-            return response()->json(['caption' => ''], 400);
+            return response()->json(['caption' => '', 'image' => ''], 400);
         }
 
         try {
-            // A. KHUSUS YOUTUBE (Gunakan oEmbed API resmi)
+            // A. KHUSUS YOUTUBE
             if (str_contains($url, 'youtube.com') || str_contains($url, 'youtu.be')) {
                 $oembedUrl = "https://www.youtube.com/oembed?url=" . $url . "&format=json";
                 $response = Http::get($oembedUrl);
@@ -30,55 +32,52 @@ class AgendaController extends Controller
                 if ($response->successful()) {
                     $data = $response->json();
                     return response()->json([
-                        'caption' => $data['title'] ?? '' // Ambil Judul Video
+                        'caption' => $data['title'] ?? '',
+                        'image'   => $data['thumbnail_url'] ?? '',
+                        'provider'=> 'youtube'
                     ]);
                 }
             }
 
-            // B. WEBSITE UMUM (Scraping sederhana)
-            // Timeout 5 detik agar tidak loading lama
+            // B. WEBSITE LAIN
             $response = Http::timeout(5)->get($url);
             
             if ($response->successful()) {
                 $html = $response->body();
+                $caption = '';
 
-                // Cari Open Graph Description
-                if (preg_match('/<meta[^>]+property="og:description"[^>]+content="([^"]+)"/i', $html, $matches)) {
-                    return response()->json(['caption' => html_entity_decode($matches[1])]);
-                }
-
-                // Cari Meta Description
-                if (preg_match('/<meta[^>]+name="description"[^>]+content="([^"]+)"/i', $html, $matches)) {
-                    return response()->json(['caption' => html_entity_decode($matches[1])]);
-                }
-
-                // Cari Title Halaman
                 if (preg_match('/<title[^>]*>(.*?)<\/title>/is', $html, $matches)) {
-                    return response()->json(['caption' => html_entity_decode($matches[1])]);
+                    $caption = trim(strip_tags(html_entity_decode($matches[1])));
                 }
+
+                return response()->json([
+                    'caption' => $caption,
+                    'image'   => '',
+                    'provider'=> 'link'
+                ]);
             }
 
-            return response()->json(['caption' => '']); // Berhasil connect tapi tidak nemu data
+            return response()->json(['caption' => '', 'image' => '']);
 
         } catch (\Exception $e) {
-            // Error koneksi atau parsing
-            return response()->json(['caption' => ''], 500);
+            return response()->json(['caption' => '', 'image' => ''], 200);
         }
     }
 
-    // --- 2. FUNGSI UPDATE DATA ---
-    public function update(Request $request)
+    // =================================================================
+    // 2. STORE (SIMPAN & UPDATE BULK) - DULU NAMANYA UPDATE
+    // =================================================================
+    // Kita ubah namanya jadi 'store' agar cocok dengan Route::post('/agenda')
+    public function store(Request $request)
     {
-        // 1. PRE-PROCESSING JSON
         $data = $request->all();
+        
+        // Decode JSON string jika dikirim via FormData
         if (isset($data['items']) && is_string($data['items'])) {
             $decoded = json_decode($data['items'], true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                $data['items'] = $decoded;
-            }
+            if (json_last_error() === JSON_ERROR_NONE) $data['items'] = $decoded;
         }
 
-        // 2. VALIDASI
         $validator = Validator::make($data, [
             'items' => 'required|array',
             'items.*.type' => 'required|in:main,grid', 
@@ -90,24 +89,22 @@ class AgendaController extends Controller
 
         $items = $data['items'];
 
-        // 3. PROSES SIMPAN
         try {
             foreach ($items as $key => &$item) {
+                // Cek ID: Jika ada ID dan bukan string "new-xxx", berarti update
                 $itemId = isset($item['id']) && !str_starts_with($item['id'], 'new-') ? $item['id'] : null;
                 $fileKey = "file_" . ($itemId ?? $item['id']);
 
+                // --- LOGIKA UPLOAD FILE ---
                 if ($request->hasFile($fileKey)) {
                     $file = $request->file($fileKey);
+                    
+                    // Simpan ke storage/app/public/agenda
+                    $path = $file->store('agenda', 'public'); 
+                    
+                    // Generate URL Publik
+                    $url = asset('storage/' . $path);
 
-                    // Ambil URL MinIO
-                    $baseUrl = config('filesystems.disks.minio.url') ?? env('MINIO_URL');
-                    if (!$baseUrl) throw new \Exception("Konfigurasi MINIO_URL belum diset.");
-
-                    // Upload
-                    $path = $file->storePublicly("agenda", 'minio'); 
-                    if (!$path) throw new \Exception("Gagal upload ke MinIO.");
-
-                    $url = rtrim($baseUrl, '/') . '/' . ltrim($path, '/');
                     $item['mediaUrl'] = $url;
                     
                     $mime = $file->getMimeType();
@@ -115,18 +112,16 @@ class AgendaController extends Controller
                     
                     $item['mediaMeta'] = [
                         'type' => $isVideo ? 'video' : 'image',
-                        'provider' => 'MinIO Storage',
+                        'provider' => 'Local Storage',
                         'previewUrl' => $url,
                         'streamUrl' => $isVideo ? $url : null,
                         'caption' => $item['mediaMeta']['caption'] ?? '' 
                     ];
                 }
 
-                // Prepare DB Data
+                // Prepare Data DB
                 $mediaMetaToSave = $item['mediaMeta'] ?? [];
-                if (is_string($mediaMetaToSave)) {
-                     $mediaMetaToSave = json_decode($mediaMetaToSave, true) ?? [];
-                }
+                if (is_string($mediaMetaToSave)) $mediaMetaToSave = json_decode($mediaMetaToSave, true) ?? [];
 
                 $dbData = [
                     'type'           => $item['type'],
@@ -143,8 +138,10 @@ class AgendaController extends Controller
                 ];
 
                 if ($itemId) {
+                    // Update data lama
                     AgendaItem::updateOrCreate(['id' => $itemId], $dbData);
                 } else {
+                    // Buat data baru
                     $newItem = AgendaItem::create($dbData);
                     $item['id'] = $newItem->id; 
                 }
@@ -154,14 +151,35 @@ class AgendaController extends Controller
 
         } catch (\Exception $e) {
             Log::error("Error Agenda Update: " . $e->getMessage());
-            return response()->json([
-                'message' => 'Terjadi Kesalahan Server',
-                'error_detail' => $e->getMessage()
-            ], 500);
+            return response()->json(['message' => 'Server Error', 'error' => $e->getMessage()], 500);
         }
     }
 
-    // --- 3. FUNGSI GET DATA ---
+    // =================================================================
+    // 3. DESTROY (HAPUS DATA) - INI YANG KEMARIN HILANG
+    // =================================================================
+    public function destroy($id)
+    {
+        try {
+            $agenda = AgendaItem::findOrFail($id);
+
+            // Opsional: Hapus file gambarnya juga dari storage jika mau bersih
+            // if ($agenda->media_url) {
+            //     // Logic hapus file di sini (perlu parsing path dari URL)
+            // }
+
+            $agenda->delete();
+
+            return response()->json(['message' => 'Agenda berhasil dihapus']);
+
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal menghapus data', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    // =================================================================
+    // 4. INDEX (GET ALL DATA)
+    // =================================================================
     public function index()
     {
         $items = AgendaItem::orderBy('sort_order', 'asc')->get();

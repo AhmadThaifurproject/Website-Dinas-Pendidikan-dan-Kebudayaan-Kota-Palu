@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Contracts\Filesystem\Cloud;
 
 class UploadController extends Controller
 {
@@ -24,8 +23,8 @@ class UploadController extends Controller
         // Flag replace
         $force = $request->input('force') === 'true';
 
-        /** @var Cloud $disk */
-        $disk = Storage::disk('minio'); // ← PASTI MINIO
+        // ✅ PERUBAHAN: Gunakan disk 'public' (Local Hostinger)
+        $disk = Storage::disk('public'); 
 
         // Cek file di lokasi yg sama
         if ($disk->exists($path)) {
@@ -39,7 +38,8 @@ class UploadController extends Controller
         }
 
         // Cek duplikasi di lokasi lain
-        $allFiles = $disk->allFiles();
+        // Catatan: allFiles() di local storage bisa berat jika file ribuan, tapi untuk folder spesifik masih aman.
+        $allFiles = $disk->allFiles(); 
         $duplicateLocations = [];
 
         foreach ($allFiles as $f) {
@@ -55,13 +55,14 @@ class UploadController extends Controller
             ], 409);
         }
 
-        // Upload ke MinIO
+        // ✅ PERUBAHAN: Upload ke Local Storage
         $disk->putFileAs($folder, $request->file('file'), $originalName);
 
+        // ✅ PERUBAHAN URL: Gunakan asset() agar linknya benar (https://api.../storage/...)
         return response()->json([
             'message' => 'File berhasil diupload',
             'path' => $path,
-            'url'  => $disk->url($path), // URL MinIO
+            'url'  => asset('storage/' . $path), 
             'originalName' => $originalName,
         ]);
     }
@@ -72,15 +73,16 @@ class UploadController extends Controller
         $layanan = strtolower($layanan);
         $folder = "$bidang/$layanan";
 
-        /** @var Cloud $disk */
-        $disk = Storage::disk('minio'); // ← MINIO
+        // ✅ PERUBAHAN: Gunakan disk 'public'
+        $disk = Storage::disk('public');
 
         $files = $disk->files($folder);
 
-        $data = array_map(function ($filePath) use ($disk) {
+        $data = array_map(function ($filePath) {
+            // ✅ PERUBAHAN URL: Gunakan asset()
             return [
                 'name' => basename($filePath),
-                'url'  => $disk->url($filePath),
+                'url'  => asset('storage/' . $filePath),
             ];
         }, $files);
 
@@ -91,8 +93,8 @@ class UploadController extends Controller
     {
         $path = strtolower("$bidang/$layanan/$filename");
 
-        /** @var Cloud $disk */
-        $disk = Storage::disk('minio'); // ← MINIO
+        // ✅ PERUBAHAN: Gunakan disk 'public'
+        $disk = Storage::disk('public');
 
         if ($disk->exists($path)) {
             $disk->delete($path);
