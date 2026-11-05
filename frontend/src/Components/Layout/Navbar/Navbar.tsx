@@ -10,22 +10,22 @@ import {
 } from "lucide-react";
 
 // --- SHADCN IMPORTS ---
-import { Button } from "@/Components/Ui/button";
+import { Button } from "@/Components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/Components/Ui/sheet";
+} from "@/Components/ui/sheet";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/Components/Ui/accordion";
-import { ScrollArea } from "@/Components/Ui/scroll-area";
-import { Separator } from "@/Components/Ui/separator";
+} from "@/Components/ui/accordion";
+import { ScrollArea } from "@/Components/ui/scroll-area";
+import { Separator } from "@/Components/ui/separator";
 
 // Tipe data
 type MenuItems = string[] | { [category: string]: string[] };
