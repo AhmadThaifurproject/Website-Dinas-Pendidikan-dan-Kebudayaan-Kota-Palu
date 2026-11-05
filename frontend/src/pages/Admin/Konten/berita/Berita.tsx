@@ -9,7 +9,7 @@ import ReactQuill from 'react-quill';
 import DOMPurify from 'dompurify';
 import { extractFirstImage } from "../../../../utils/helper.ts"; 
 import UploadToHighlight from "../../../../feature/highlight/UploadToHighlight.tsx"; 
-import { getViewBadge } from "../../../../Components/Helper/viewBadge.ts"; 
+import { getViewBadge } from "../../../../Components/helper/viewBadge.ts"; 
 import { 
   User, Calendar, Hash, Image as ImageIcon, 
   Search, Filter, Trash2, Type, PenTool, FolderTree, 
