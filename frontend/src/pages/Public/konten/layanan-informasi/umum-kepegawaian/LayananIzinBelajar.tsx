@@ -31,6 +31,10 @@ import {
   HelpCircle         
 } from "lucide-react";
 
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 // --- TIPE DATA (Sesuai Struktur Admin) ---
 interface ContentData {
   layanan: string;
@@ -122,7 +126,8 @@ export default function LayananIzinBelajar() {
     const fetchData = async () => {
       try {
         // ENDPOINT: Izin Belajar
-        const response = await fetch("http://localhost:8000/api/kepegawaian/content/izin-belajar");
+        // ✅ PERUBAHAN: Endpoint dinamis menggunakan API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/kepegawaian/content/izin-belajar`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -152,8 +157,9 @@ export default function LayananIzinBelajar() {
   }, [initialLoading]); 
 
   // --- VIEWER PROPS ---
+  // ✅ PERUBAHAN: Endpoint dinamis
   const viewerProps = {
-    endpoint: "http://localhost:8000/api/kepegawaian/upload/izin-belajar", 
+    endpoint: `${API_BASE_URL}/public/kepegawaian/upload/izin-belajar`, 
   };
 
   // --- HELPER: COLOR MAPPING (Sinkron dengan Admin) ---
@@ -447,7 +453,7 @@ export default function LayananIzinBelajar() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace(/ring-\w+-\d+/g, '').replace(/border-\w+-\d+/g, '').split(' ')[0]} ${getStepColor(step.color).match(/ring-\w+-\d+/)}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -483,10 +489,10 @@ export default function LayananIzinBelajar() {
                                 <h3 className="text-xl font-bold text-slate-800">Waktu Pelayanan</h3>
                                 <p className="text-sm text-slate-400">Jadwal layanan konsultasi.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-indigo-100'}`}>
@@ -528,7 +534,7 @@ export default function LayananIzinBelajar() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
                           {/* Link Peta */}
                           {data.mapLink && (
@@ -645,11 +651,9 @@ export default function LayananIzinBelajar() {
                         </div>
                         {data.contactSectionTitle || "Kontak Layanan"}
                     </h3>
-                    {data.contactSectionDesc && (
-                      <p className="text-sm text-slate-400 leading-relaxed">
-                          {data.contactSectionDesc}
-                      </p>
-                    )}
+                    <p className="text-sm text-slate-400 leading-relaxed">
+                        {data.contactSectionDesc || "Mengalami kendala terkait layanan ini? Hubungi tim teknis kami."}
+                    </p>
                 </div>
 
                 <div className="relative z-10 space-y-3">
@@ -657,7 +661,7 @@ export default function LayananIzinBelajar() {
                       data.contacts.map((contact, i) => (
                         <div key={i} className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-colors backdrop-blur-md">
                             <div className="bg-yellow-400 p-2.5 rounded-full text-slate-900 shadow-lg shadow-yellow-400/20">
-                              <ContactIconComponent size={18} />
+                            <ContactIconComponent size={18} />
                             </div>
                             <div>
                             <p className="text-[10px] text-yellow-200 uppercase font-bold tracking-wider mb-0.5">

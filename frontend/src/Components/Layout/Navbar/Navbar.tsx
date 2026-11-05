@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 
 // --- SHADCN IMPORTS ---
-// Pastikan path ini benar sesuai struktur foldermu yang baru (huruf kecil 'components')
 import { Button } from "@/components/Ui/button";
 import {
   Sheet,
@@ -46,7 +45,6 @@ const getIconForItem = (text: string) => {
   if (lower.includes("aset") || lower.includes("keuangan")) return <Building2 size={18} />;
   if (lower.includes("gtk") || lower.includes("ketenagaan")) return <Users size={18} />;
   if (lower.includes("kebudayaan")) return <Landmark size={18} />;
-  if (lower.includes("pengaduan")) return <MessageSquare size={18} />;
   if (lower.includes("visi") || lower.includes("sejarah")) return <BookOpen size={18} />;
   if (lower.includes("berita")) return <Globe size={18} />;
   return <FileText size={18} />;
@@ -76,7 +74,7 @@ const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // State untuk Sheet Mobile
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Efek Scroll
   useEffect(() => {
@@ -196,7 +194,7 @@ const Navbar: React.FC<NavbarProps> = ({
                </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto max-h-[50vh] md:max-h-none pr-2">
+            <div className="flex-1 overflow-y-auto max-h-[60vh] md:max-h-none pr-2">
               {isCategorized ? (
                 <div key={activeSubCategory} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {activeSubCategory && (items as any)[activeSubCategory]?.map((item: string, idx: number) =>
@@ -216,16 +214,18 @@ const Navbar: React.FC<NavbarProps> = ({
   };
 
   // --- STYLE NAVBAR ---
+  // Penambahan max-w-[100vw] agar di mobile navbar tidak pernah menjebol layar
   const navContainerStyle = isScrolled
-    ? "w-full rounded-none mt-0 py-3 px-4 md:px-8 bg-white/95 backdrop-blur-md shadow-md border-b border-gray-200"
-    : "w-[95%] max-w-7xl rounded-full mt-6 py-3 px-6 bg-indigo-900/80 backdrop-blur-sm border border-white/10 shadow-xl";
+    ? "w-full max-w-[100vw] rounded-none mt-0 py-3 px-4 md:px-8 bg-white/95 backdrop-blur-md shadow-md border-b border-gray-200"
+    : "w-[95%] max-w-7xl rounded-full mt-6 py-3 px-4 md:px-6 bg-indigo-900/80 backdrop-blur-sm border border-white/10 shadow-xl";
 
   const textColor = isScrolled ? "text-indigo-900" : "text-white";
   const hoverBg = isScrolled ? "hover:bg-indigo-50 hover:text-indigo-700" : "hover:bg-white/10 hover:text-white";
   const hamburgerColor = isScrolled ? "text-indigo-900" : "text-white";
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none font-sans">
+    // Memastikan wadah fixed memiliki max-w-[100vw]
+    <nav className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none font-sans w-full max-w-[100vw]">
       <div className={`pointer-events-auto transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center justify-between ${navContainerStyle}`}>
         
         {/* --- LOGO --- */}
@@ -242,6 +242,8 @@ const Navbar: React.FC<NavbarProps> = ({
         </a>
 
         {/* --- DESKTOP MENU (Hidden on Mobile) --- */}
+        {/* ukuran untuk semua jenis hp/tablet: hidden (disembunyikan, ganti hamburger) */}
+        {/* ukuran untuk semua jenis pc: lg:flex */}
         <div className="hidden lg:flex items-center gap-1">
           <button onClick={() => onMenuClick("beranda", "Beranda")} className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${activeDropdown === null ? (isScrolled ? "text-gray-600" : "text-white") : "text-gray-400"} ${hoverBg}`}>
             <Home size={16} /> Beranda
@@ -261,15 +263,17 @@ const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* --- MOBILE MENU (SHADCN SHEET) --- */}
+        {/* ukuran untuk semua jenis hp/tablet: lg:hidden (ditampilkan di mobile & tablet) */}
+        {/* ukuran untuk semua jenis pc: hidden (disembunyikan) */}
         <div className="lg:hidden">
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className={hamburgerColor}>
+              <Button variant="ghost" size="icon" className={hamburgerColor} aria-label="Menu Mobile">
                 <Menu size={28} />
               </Button>
             </SheetTrigger>
             
-            <SheetContent side="right" className="w-[85%] sm:w-[380px] p-0">
+            <SheetContent side="right" className="w-[85%] sm:w-[380px] p-0 max-w-[100vw]">
                <SheetHeader className="p-6 bg-gradient-to-br from-indigo-900 to-indigo-800 text-white">
                  <SheetTitle className="text-white flex items-center gap-3">
                    <img src="/images/Logo Disdikbud Palu.png" alt="Logo" className="h-8 w-auto bg-white rounded-full p-0.5" />

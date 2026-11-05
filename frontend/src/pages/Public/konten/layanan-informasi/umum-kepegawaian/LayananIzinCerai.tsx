@@ -35,6 +35,10 @@ import {
   HeartHandshake 
 } from "lucide-react";
 
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 // --- TIPE DATA (Sesuai Struktur Admin) ---
 interface ContentData {
   layanan: string;
@@ -126,7 +130,8 @@ export default function LayananIzinCerai() {
     const fetchData = async () => {
       try {
         // ENDPOINT: Izin Cerai
-        const response = await fetch("http://localhost:8000/api/kepegawaian/content/izin-cerai");
+        // ✅ PERUBAHAN: Endpoint dinamis menggunakan API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/kepegawaian/content/izin-cerai`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -155,8 +160,9 @@ export default function LayananIzinCerai() {
   }, [initialLoading]); 
 
   // --- VIEWER PROPS ---
+  // ✅ PERUBAHAN: Endpoint dinamis
   const viewerProps = {
-    endpoint: "http://localhost:8000/api/kepegawaian/upload/izin-cerai", 
+    endpoint: `${API_BASE_URL}/public/kepegawaian/upload/izin-cerai`, 
   };
 
   // --- HELPER: COLOR MAPPING (Sinkron dengan Admin) ---
@@ -448,7 +454,7 @@ export default function LayananIzinCerai() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace(/ring-\w+-\d+/g, '').replace(/border-\w+-\d+/g, '').split(' ')[0]} ${getStepColor(step.color).match(/ring-\w+-\d+/)}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -466,7 +472,7 @@ export default function LayananIzinCerai() {
                       </motion.div>
                     )}
 
-                    {/* === TAB 2: JAM LAYANAN === */}
+                    {/* === TAB 2: JAM OPERASIONAL === */}
                     {activeTab === "schedule" && (
                         <motion.div
                         key="schedule"
@@ -484,12 +490,14 @@ export default function LayananIzinCerai() {
                                 <h3 className="text-xl font-bold text-slate-800">Waktu Mediasi</h3>
                                 <p className="text-sm text-slate-400">Jadwal konsultasi dan pembinaan unit disiplin.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-indigo-100'}`}>
+                                    {/* Hari */}
                                     <div className="flex items-center gap-4 mb-3 md:mb-0">
                                         <div className={`p-3 rounded-xl ${item.status === 'off' ? 'bg-rose-100 text-rose-600' : 'bg-indigo-50 text-indigo-600'}`}>
                                             <Calendar size={24} />
@@ -501,6 +509,7 @@ export default function LayananIzinCerai() {
                                             </div>
                                         </div>
                                     </div>
+                                    {/* Jam */}
                                     <div className="flex flex-col md:items-end gap-1 pl-14 md:pl-0">
                                         {item.status !== 'off' ? (
                                             <>
@@ -526,8 +535,9 @@ export default function LayananIzinCerai() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
+                          {/* Link Peta */}
                           {data.mapLink && (
                            <a href={data.mapLink} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-indigo-600 font-medium cursor-pointer hover:underline mt-2">
                               <MapPin size={16} /> Lihat Lokasi Unit Disiplin
@@ -538,6 +548,7 @@ export default function LayananIzinCerai() {
                   </AnimatePresence>
                 </div>
               </motion.div>
+
             </motion.div>
 
             {/* === KOLOM KANAN (Sidebar) === */}
@@ -548,6 +559,7 @@ export default function LayananIzinCerai() {
                transition={{ duration: 0.8, delay: 0.5 }}
                className="lg:w-1/3 flex flex-col gap-6 order-1 lg:order-2 lg:sticky lg:top-8 h-fit z-30 relative"
             >
+              {/* === OVERLAY UPDATE ANIMATION === */}
               <AnimatePresence>
                 {isUpdating && <UpdatingOverlay />}
               </AnimatePresence>
@@ -640,11 +652,9 @@ export default function LayananIzinCerai() {
                         </div>
                         {data.contactSectionTitle || "Kontak Layanan"}
                     </h3>
-                    {data.contactSectionDesc && (
-                      <p className="text-sm text-slate-400 leading-relaxed">
-                          {data.contactSectionDesc}
-                      </p>
-                    )}
+                    <p className="text-sm text-slate-400 leading-relaxed">
+                        {data.contactSectionDesc}
+                    </p>
                 </div>
 
                 <div className="relative z-10 space-y-3">

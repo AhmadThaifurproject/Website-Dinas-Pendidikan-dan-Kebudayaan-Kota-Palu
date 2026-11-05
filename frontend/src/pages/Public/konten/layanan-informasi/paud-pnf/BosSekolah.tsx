@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios"; // ✅ Import Axios
 import LayananViewer from "../../../../../feature/layanan/LayananViewer"; 
 import {
   CheckCircle,
@@ -22,7 +23,11 @@ import {
   RefreshCw 
 } from "lucide-react";
 
-// --- TIPE DATA DARI BACKEND ---
+// --- KONFIGURASI API ---
+// Kita tidak lagi butuh API_BASE_URL secara manual di sini karena 
+// Axios sudah dikonfigurasi secara global di main.tsx
+const API_URL = import.meta.env.VITE_API_URL;
+
 interface ContentData {
   layanan: string;
   isPersyaratanActive: boolean;
@@ -54,7 +59,6 @@ interface ContentData {
   contacts?: { name: string; number: string }[];
 }
 
-// --- KOMPONEN ELEGANT LOADER OVERLAY ---
 const UpdatingOverlay = () => (
   <motion.div 
     initial={{ opacity: 0 }}
@@ -84,71 +88,57 @@ const UpdatingOverlay = () => (
 
 export default function BosSekolah() {
   const [activeTab, setActiveTab] = useState<"service" | "schedule">("service");
-  
-  // State Data
   const [content, setContent] = useState<ContentData | null>(null);
-  
-  // State Loading Awal (Full Screen)
   const [initialLoading, setInitialLoading] = useState(true);
-  
-  // State Updating (Overlay saat polling)
   const [isUpdating, setIsUpdating] = useState(false);
-
-  // Ref untuk menyimpan data terakhir agar bisa dibandingkan
   const prevContentRef = useRef<string>("");
 
-  // --- LOGIKA FETCHING (POLLING) ---
+  // --- LOGIKA FETCHING (MENGGUNAKAN AXIOS) ---
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // PERUBAHAN: Endpoint disesuaikan untuk PAUD
-        const response = await fetch("http://localhost:8000/api/paud/content/bos-sekolah");
+        /**
+         * ✅ PERBAIKAN: Menggunakan Axios.
+         * Karena baseURL di main.tsx sudah mengarah ke root domain, 
+         * kita panggil path lengkapnya /api/... agar konsisten.
+         */
+        const response = await axios.get('/api/public/paud/content/bos-sekolah');
         
-        if (response.ok) {
-          const rawData = await response.json();
+        if (response.status === 200) {
+          const rawData = response.data;
           const stringifiedData = JSON.stringify(rawData);
 
-          // Cek apakah data BERBEDA dari sebelumnya?
           if (prevContentRef.current !== stringifiedData) {
-            
-            // Jika ini bukan load pertama, nyalakan efek "Updating"
             if (!initialLoading) {
               setIsUpdating(true);
-              await new Promise(r => setTimeout(r, 800)); // Delay estetika
+              await new Promise(r => setTimeout(r, 800));
             }
 
             setContent(rawData);
-            prevContentRef.current = stringifiedData; // Update referensi data
-            
+            prevContentRef.current = stringifiedData;
             setIsUpdating(false);
           }
         }
       } catch (error) {
         console.error("Error connecting to server", error);
       } finally {
-        // Matikan loading awal hanya sekali
         if (initialLoading) setInitialLoading(false);
       }
     };
 
-    fetchData(); // Load pertama langsung
-    
-    // Polling setiap 3 detik (3000ms)
+    fetchData();
     const intervalId = setInterval(fetchData, 3000); 
-    
-    // Cleanup saat komponen di-unmount
     return () => clearInterval(intervalId);
   }, [initialLoading]); 
 
   // --- VIEWER PROPS ---
-  // Endpoint disesuaikan untuk PAUD
   const viewerProps = {
-  judul: "Dokumen Bantuan Operasional (BOS/BOP)",
-  deskripsi: "Dokumen teknis penyaluran dana operasional untuk lembaga PAUD & PNF.",
-  endpoint: "http://localhost:8000/api/paud/upload/bos-sekolah", 
-};
+    judul: "Dokumen Bantuan Operasional (BOS/BOP)",
+    deskripsi: "Dokumen teknis penyaluran dana operasional untuk lembaga PAUD & PNF.",
+    // ✅ Menggunakan konstanta API_URL dari env untuk viewer agar tepat sasaran
+    endpoint: `${API_URL}/public/paud/upload/bos-sekolah`,
+  };
 
-  // --- HELPER FUNCTIONS ---
   const getStepColor = (color: string | undefined) => {
     switch(color) {
       case 'blue': return 'bg-blue-100 text-blue-600 border-blue-200';
@@ -179,7 +169,6 @@ export default function BosSekolah() {
     }
   };
 
-  // --- RENDER INITIAL LOADING (Full Screen) ---
   if (initialLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -194,7 +183,6 @@ export default function BosSekolah() {
     );
   }
 
-  // --- FALLBACK DATA ---
   const data: ContentData = content || {
     layanan: "bos-paud", 
     isPersyaratanActive: false,
@@ -220,11 +208,9 @@ export default function BosSekolah() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-500 selection:text-white">
-      
       {/* ================= HERO SECTION ================= */}
       <div className="relative z-20 mb-12">
         <div className="bg-[#0f172a] pt-40 pb-48 px-6 rounded-b-[3rem] shadow-2xl relative overflow-hidden">
-          {/* Background effects... */}
           <div className="absolute inset-0 bg-gradient-to-b from-slate-900 to-[#1e293b]"></div>
           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen opacity-50"></div>
           <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-600/10 blur-[100px] rounded-full mix-blend-screen opacity-40"></div>
@@ -264,7 +250,7 @@ export default function BosSekolah() {
             >
               Informasi lengkap, alur pencairan, dan pelaporan dana operasional untuk PAUD & PNF.
             </motion.p>
-
+            
              <motion.div 
                initial={{ width: 0 }}
                animate={{ width: "6rem" }}
@@ -278,22 +264,17 @@ export default function BosSekolah() {
       {/* ================= KONTEN UTAMA ================= */}
       <div className="relative z-30 -mt-32 pb-24 px-4 md:px-8">
         <div className="container mx-auto max-w-7xl">
-          
           <div className="flex flex-col lg:flex-row gap-8">
-            
-            {/* === KOLOM KIRI (Konten Utama) === */}
             <motion.div 
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3 }}
               className="lg:w-2/3 order-2 lg:order-1 relative"
             >
-              {/* === OVERLAY UPDATE ANIMATION === */}
               <AnimatePresence>
                 {isUpdating && <UpdatingOverlay />}
               </AnimatePresence>
               
-              {/* CONTAINER UTAMA */}
               <motion.div 
                 layout
                 transition={{ duration: 0.4, type: "spring", stiffness: 100, damping: 15 }}
@@ -301,7 +282,6 @@ export default function BosSekolah() {
               >
                 <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500 z-10"></div>
 
-                {/* --- NAVIGATION TABS --- */}
                 <div className="flex border-b border-slate-100 bg-slate-50/50 pt-4 px-4 md:px-8 gap-6 overflow-x-auto scrollbar-hide z-0">
                   <button 
                     onClick={() => setActiveTab("service")}
@@ -330,11 +310,8 @@ export default function BosSekolah() {
                   </button>
                 </div>
 
-                {/* --- TAB CONTENT AREA --- */}
                 <div className="p-6 md:p-8 flex-1 bg-white relative">
                   <AnimatePresence mode="wait">
-                    
-                    {/* === TAB 1: LAYANAN & BERKAS === */}
                     {activeTab === "service" && (
                       <motion.div
                         key="service"
@@ -344,7 +321,6 @@ export default function BosSekolah() {
                         transition={{ duration: 0.3 }}
                         className="space-y-10"
                       >
-                        {/* 1. FILE PREVIEW UTAMA */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
@@ -355,17 +331,15 @@ export default function BosSekolah() {
                                 </div>
                             </div>
 
-                            {/* CONTAINER PREVIEWER */}
                             <div className="w-full h-[500px] bg-slate-50 rounded-2xl border border-slate-200 shadow-inner relative isolate overflow-hidden overscroll-contain transform-gpu z-0">
                                 <LayananViewer
-                                    judul="" 
-                                    deskripsi=""
+                                    judul={viewerProps.judul} 
+                                    deskripsi={viewerProps.deskripsi}
                                     endpoint={viewerProps.endpoint} 
                                 />
                             </div>
                         </div>
 
-                        {/* BAGIAN BAWAH */}
                         {(data.isPersyaratanActive || data.isAlurActive) && (
                           <motion.div 
                             layout 
@@ -377,7 +351,6 @@ export default function BosSekolah() {
                             <div className="border-t border-slate-100"></div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                {/* 2. PERSYARATAN */}
                                 {data.isPersyaratanActive && (
                                   <div className="space-y-5">
                                       <div className="flex items-center gap-2 mb-2">
@@ -403,13 +376,12 @@ export default function BosSekolah() {
                                   </div>
                                 )}
 
-                                {/* 3. ALUR */}
                                 {data.isAlurActive && (
                                   <div className="space-y-5">
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                               <Briefcase className="text-indigo-500" size={20}/>
-                                              Alur Singkat
+                                              Alur Pelayanan
                                           </h3>
                                       </div>
                                       <div className="relative pl-6 border-l-2 border-slate-100 space-y-6">
@@ -417,7 +389,7 @@ export default function BosSekolah() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -435,7 +407,6 @@ export default function BosSekolah() {
                       </motion.div>
                     )}
 
-                    {/* === TAB 2: JAM OPERASIONAL === */}
                     {activeTab === "schedule" && (
                         <motion.div
                         key="schedule"
@@ -451,16 +422,14 @@ export default function BosSekolah() {
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold text-slate-800">Jadwal Pelayanan</h3>
-                                <p className="text-sm text-slate-400">Informasi hari dan jam buka layanan tatap muka Bidang PAUD.</p>
+                                <p className="text-sm text-slate-400">Informasi hari dan jam buka layanan.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
-                                    {/* Hari */}
                                     <div className="flex items-center gap-4 mb-3 md:mb-0">
                                         <div className={`p-3 rounded-xl ${item.status === 'off' ? 'bg-rose-100 text-rose-600' : 'bg-blue-50 text-blue-600'}`}>
                                             <Calendar size={24} />
@@ -472,7 +441,6 @@ export default function BosSekolah() {
                                             </div>
                                         </div>
                                     </div>
-                                    {/* Jam */}
                                     <div className="flex flex-col md:items-end gap-1 pl-14 md:pl-0">
                                         {item.status !== 'off' ? (
                                             <>
@@ -498,9 +466,8 @@ export default function BosSekolah() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
-                          {/* Link Peta */}
                           {data.mapLink && (
                            <a href={data.mapLink} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:underline mt-2">
                               <MapPin size={16} /> Lihat Lokasi Kantor di Google Maps
@@ -511,10 +478,8 @@ export default function BosSekolah() {
                   </AnimatePresence>
                 </div>
               </motion.div>
-
             </motion.div>
 
-            {/* === KOLOM KANAN (Sidebar) === */}
             <motion.div 
                layout 
                initial={{ opacity: 0, x: 20 }}
@@ -522,12 +487,10 @@ export default function BosSekolah() {
                transition={{ duration: 0.8, delay: 0.5 }}
                className="lg:w-1/3 flex flex-col gap-6 order-1 lg:order-2 lg:sticky lg:top-8 h-fit z-30 relative"
             >
-              {/* === OVERLAY UPDATE ANIMATION === */}
               <AnimatePresence>
                 {isUpdating && <UpdatingOverlay />}
               </AnimatePresence>
 
-              {/* 2. CTA BUTTON */}
               <AnimatePresence mode="popLayout">
                 {data.portalVisible && (
                     <motion.div
@@ -546,14 +509,13 @@ export default function BosSekolah() {
                       >
                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                         <Globe className="relative z-10" size={20}/>
-                        <span className="relative z-10">{data.portalLabel || "Buka Portal Online"}</span>
+                        <span className="relative z-10">{data.portalLabel || "Akses Layanan"}</span>
                         <ArrowRight className="group-hover:translate-x-1 transition-transform relative z-10" size={20} />
                       </a>
                     </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* 3. DOWNLOAD AREA */}
               <motion.div 
                 layout 
                 transition={{ duration: 0.4, ease: "easeInOut" }}
@@ -579,7 +541,7 @@ export default function BosSekolah() {
                     data.downloads.map((file, index) => (
                       <a key={index} href={file.url} target="_blank" rel="noreferrer" className="flex items-center justify-between p-4 bg-slate-50 hover:bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group cursor-pointer">
                         <div className="flex items-center gap-4 overflow-hidden">
-                          <div className="w-10 h-10 bg-white text-rose-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
+                          <div className="w-10 h-10 bg-white text-emerald-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
                             <FileText size={20} />
                           </div>
                           <span className="text-sm font-medium text-slate-700 truncate group-hover:text-indigo-700 transition">
@@ -592,14 +554,13 @@ export default function BosSekolah() {
                   ) : (
                       <div className="py-6 text-center px-4">
                         <p className="text-sm text-slate-500 italic font-medium">
-                            Belum ada dokumen yang tersedia untuk diunduh saat ini.
+                            Belum ada dokumen yang tersedia.
                         </p>
                       </div>
                   )}
                 </div>
               </motion.div>
 
-              {/* 4. CONTACT CARD */}
               <motion.div 
                 layout 
                 transition={{ duration: 0.4, ease: "easeInOut" }}
@@ -616,7 +577,7 @@ export default function BosSekolah() {
                         {data.contactSectionTitle || "Kontak Layanan"}
                     </h3>
                     <p className="text-sm text-slate-400 leading-relaxed">
-                        {data.contactSectionDesc || "Mengalami kendala terkait layanan ini? Hubungi tim teknis kami."}
+                        {data.contactSectionDesc || "Butuh bantuan? Hubungi kami."}
                     </p>
                 </div>
 
@@ -629,7 +590,7 @@ export default function BosSekolah() {
                             </div>
                             <div>
                             <p className="text-[10px] text-yellow-200 uppercase font-bold tracking-wider mb-0.5">
-                                {contact.name || "Admin PAUD"}
+                                {contact.name || "Admin"}
                             </p>
                             <p className="font-bold text-lg tracking-wide">
                                 {contact.number}
@@ -644,9 +605,7 @@ export default function BosSekolah() {
                   )}
                 </div>
               </motion.div>
-
             </motion.div>
-
           </div>
         </div>
       </div>

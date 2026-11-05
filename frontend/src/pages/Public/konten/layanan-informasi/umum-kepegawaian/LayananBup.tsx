@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios"; // ✅ Gunakan Axios untuk konsistensi main.tsx
 import LayananViewer from "../../../../../feature/layanan/LayananViewer"; 
 import {
   CheckCircle,
@@ -26,6 +27,10 @@ import {
   HelpCircle
 } from "lucide-react";
 
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 // --- TIPE DATA DARI BACKEND ---
 interface ContentData {
   layanan: string;
@@ -47,10 +52,9 @@ interface ContentData {
   }[];
   mapLink: string;
   
-  // New Fields (UI Settings)
+  // UI Settings
   previewSectionTitle?: string;
   previewSectionDesc?: string;
-  
   tabTitle?: string;
   tabIcon?: string;
   portalVisible?: boolean;
@@ -64,7 +68,6 @@ interface ContentData {
   contacts?: { name: string; number: string }[];
 }
 
-// --- KOMPONEN ELEGANT LOADER OVERLAY ---
 const UpdatingOverlay = () => (
   <motion.div 
     initial={{ opacity: 0 }}
@@ -94,21 +97,20 @@ const UpdatingOverlay = () => (
 
 export default function LayananBup() {
   const [activeTab, setActiveTab] = useState<"service" | "schedule">("service");
-  
-  // State Data
   const [content, setContent] = useState<ContentData | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const prevContentRef = useRef<string>("");
 
-  // --- LOGIKA FETCHING (POLLING) ---
+  // --- LOGIKA FETCHING (MENGGUNAKAN AXIOS) ---
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/kepegawaian/content/bup");
+        // ✅ PERUBAHAN: Menggunakan Axios & Jalur Public agar sinkron dengan api.php
+        const response = await axios.get('/api/public/kepegawaian/content/bup');
         
-        if (response.ok) {
-          const rawData = await response.json();
+        if (response.status === 200) {
+          const rawData = response.data;
           const stringifiedData = JSON.stringify(rawData);
 
           if (prevContentRef.current !== stringifiedData) {
@@ -149,7 +151,7 @@ export default function LayananBup() {
   const getDayStatusBadge = (status: string | undefined) => {
     switch(status) {
         case 'off': return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-600">Libur</span>;
-        case 'special': return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-600">Khusus</span>;
+        case 'special': return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-600">Piket</span>;
         default: return null; 
     }
   };
@@ -172,7 +174,6 @@ export default function LayananBup() {
     }
   };
 
-  // --- RENDER INITIAL LOADING ---
   if (initialLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -215,11 +216,10 @@ export default function LayananBup() {
   const TabIconService = getIconComponent(data.tabIcon, Briefcase);
   const ContactIcon = getIconComponent(data.contactSectionIcon, Phone);
 
-  // VIEWER PROPS
+  // --- VIEWER PROPS ---
   const viewerProps = {
-    judul: "", 
-    deskripsi: "",
-    endpoint: "http://localhost:8000/api/kepegawaian/upload/bup", 
+    // ✅ PERBAIKAN: Gunakan API_BASE_URL (dari .env) dan pastikan tidak ada double /api
+    endpoint: `${API_BASE_URL}/public/kepegawaian/upload/bup`, 
   };
 
   return (
@@ -329,11 +329,8 @@ export default function LayananBup() {
                   </button>
                 </div>
 
-                {/* --- TAB CONTENT AREA --- */}
                 <div className="p-6 md:p-8 flex-1 bg-white relative">
                   <AnimatePresence mode="wait">
-                    
-                    {/* === TAB 1: LAYANAN & BERKAS === */}
                     {activeTab === "service" && (
                       <motion.div
                         key="service"
@@ -343,7 +340,6 @@ export default function LayananBup() {
                         transition={{ duration: 0.3 }}
                         className="space-y-10"
                       >
-                        {/* 1. FILE PREVIEW UTAMA */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
@@ -357,7 +353,6 @@ export default function LayananBup() {
                                 </div>
                             </div>
 
-                            {/* CONTAINER PREVIEWER */}
                             <div className="w-full h-[500px] bg-slate-50 rounded-2xl border border-slate-200 shadow-inner relative isolate overflow-hidden overscroll-contain transform-gpu z-0">
                                 <LayananViewer
                                     judul="" 
@@ -367,7 +362,6 @@ export default function LayananBup() {
                             </div>
                         </div>
 
-                        {/* BAGIAN BAWAH */}
                         {(data.isPersyaratanActive || data.isAlurActive) && (
                           <motion.div 
                             layout 
@@ -378,7 +372,6 @@ export default function LayananBup() {
                           >
                             <div className="border-t border-slate-100"></div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                {/* 2. PERSYARATAN */}
                                 {data.isPersyaratanActive && (
                                   <div className="space-y-5">
                                       <div className="flex items-center gap-2 mb-2">
@@ -404,7 +397,6 @@ export default function LayananBup() {
                                   </div>
                                 )}
 
-                                {/* 3. ALUR */}
                                 {data.isAlurActive && (
                                   <div className="space-y-5">
                                       <div className="flex items-center gap-2 mb-2">
@@ -436,7 +428,6 @@ export default function LayananBup() {
                       </motion.div>
                     )}
 
-                    {/* === TAB 2: JAM OPERASIONAL === */}
                     {activeTab === "schedule" && (
                         <motion.div
                         key="schedule"
@@ -454,9 +445,9 @@ export default function LayananBup() {
                                 <h3 className="text-xl font-bold text-slate-800">Waktu Pelayanan BKPSDM</h3>
                                 <p className="text-sm text-slate-400">Jadwal pelayanan tatap muka bidang pensiun.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        <div className="grid gap-4">
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-indigo-100'}`}>
@@ -496,7 +487,7 @@ export default function LayananBup() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
                           {data.mapLink && (
                            <a href={data.mapLink} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-indigo-600 font-medium cursor-pointer hover:underline mt-2">
                               <MapPin size={16} /> Lihat Lokasi Kantor di Google Maps
@@ -511,17 +502,17 @@ export default function LayananBup() {
 
             {/* === KOLOM KANAN (Sidebar) === */}
             <motion.div 
-               layout 
-               initial={{ opacity: 0, x: 20 }}
-               animate={{ opacity: 1, x: 0 }}
-               transition={{ duration: 0.8, delay: 0.5 }}
-               className="lg:w-1/3 flex flex-col gap-6 order-1 lg:order-2 lg:sticky lg:top-8 h-fit z-30 relative"
+                layout 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+                className="lg:w-1/3 flex flex-col gap-6 order-1 lg:order-2 lg:sticky lg:top-8 h-fit z-30 relative"
             >
               <AnimatePresence>
                 {isUpdating && <UpdatingOverlay />}
               </AnimatePresence>
 
-              {/* 2. CTA BUTTON */}
+              {/* 2. Tombol Portal Online */}
               <AnimatePresence mode="popLayout">
                 {data.portalVisible && (
                     <motion.div

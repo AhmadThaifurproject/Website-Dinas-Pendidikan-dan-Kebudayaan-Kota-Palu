@@ -25,6 +25,10 @@ import {
   UserCog
 } from "lucide-react";
 
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 // --- TIPE DATA DARI BACKEND ---
 interface ContentData {
   layanan: string;
@@ -104,8 +108,8 @@ export default function LayananPerubahanPasswordPajak() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // PERUBAHAN: Endpoint disesuaikan untuk ubah-password-pajak
-        const response = await fetch("http://localhost:8000/api/asetdankeuangan/content/ubah-password-pajak");
+        // ✅ GANTI DENGAN API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/asetdankeuangan/content/ubah-password-pajak`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -147,8 +151,8 @@ export default function LayananPerubahanPasswordPajak() {
   const viewerProps = {
     judul: "Panduan Reset Password Pajak",
     deskripsi: "Petunjuk teknis perubahan dan reset kata sandi akun pajak.",
-    // Endpoint sanitasi: aset & keuangan -> asetdankeuangan
-    endpoint: "http://localhost:8000/api/asetdankeuangan/upload/ubah-password-pajak", 
+    // ✅ GANTI DENGAN API_BASE_URL
+    endpoint: `${API_BASE_URL}/public/asetdankeuangan/upload/ubah-password-pajak`, 
   };
 
   // --- HELPER FUNCTIONS ---
@@ -425,7 +429,7 @@ export default function LayananPerubahanPasswordPajak() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -461,10 +465,10 @@ export default function LayananPerubahanPasswordPajak() {
                                 <h3 className="text-xl font-bold text-slate-800">Jam Layanan Teknis</h3>
                                 <p className="text-sm text-slate-400">Waktu pelayanan untuk bantuan teknis akun pajak.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-indigo-100'}`}>
@@ -506,7 +510,7 @@ export default function LayananPerubahanPasswordPajak() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
                           {/* Link Peta */}
                           {data.mapLink && (
@@ -646,9 +650,9 @@ export default function LayananPerubahanPasswordPajak() {
                         </div>
                       ))
                   ) : (
-                     <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
+                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
                         Belum ada kontak tersedia.
-                     </div>
+                      </div>
                   )}
                 </div>
               </motion.div>

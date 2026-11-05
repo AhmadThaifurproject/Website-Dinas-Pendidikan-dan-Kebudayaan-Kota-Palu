@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import FilePreview from "./FilePreview";
 
+// --- KONFIGURASI API (DINAMIS) ---
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+// Kita butuh URL Root (misal: https://api.domain.com), bukan URL API (https://api.domain.com/api)
+// Jadi kita hapus string "/api" dari akhir variabel environment
+const SERVER_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, ""); 
+
 // --- Interface Data ---
 interface FileItem {
   name: string;
@@ -27,11 +34,17 @@ export default function LayananViewer({
     try {
       const urlObj = new URL(rawUrl);
       const parts = urlObj.pathname.split("/").filter(Boolean);
+      
+      // Cek apakah url mengarah ke storage default
       if (parts.length < 4 || parts[0] !== "storage") return rawUrl;
+      
       const folder = parts[1];
       const subfolder = parts[2];
       const filename = parts.slice(3).join("/");
-      return `http://localhost:8000/preview/${folder}/${subfolder}/${filename}`;
+      
+      // ✅ GUNAKAN SERVER_BASE_URL (Dinamis)
+      // Hasil: https://api.domain.com/preview/...
+      return `${SERVER_BASE_URL}/preview/${folder}/${subfolder}/${filename}`;
     } catch {
       return rawUrl;
     }
@@ -40,6 +53,7 @@ export default function LayananViewer({
   // --- Fetch Data ---
   useEffect(() => {
     const fetchFiles = () => {
+      // Pastikan endpoint yang dikirim dari Parent Component sudah full URL
       fetch(endpoint)
         .then((res) => res.json())
         .then((data) => {

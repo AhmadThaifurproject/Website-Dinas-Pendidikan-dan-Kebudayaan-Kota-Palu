@@ -29,6 +29,10 @@ import {
   Hash
 } from "lucide-react";
 
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 // --- TIPE DATA DARI BACKEND (Sama dengan Referensi) ---
 interface ContentData {
   layanan: string;
@@ -112,8 +116,8 @@ export default function LayananIzinBerkunjung() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // PENYESUAIAN: Endpoint ke 'kebudayaan/content/izin-berkunjung'
-        const response = await fetch("http://localhost:8000/api/kebudayaan/content/izin-berkunjung");
+        // ✅ GUNAKAN API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/kebudayaan/content/izin-berkunjung`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -248,7 +252,8 @@ export default function LayananIzinBerkunjung() {
   const viewerProps = {
     judul: data.previewSectionTitle || "Izin Berkunjung",
     deskripsi: data.previewSectionDesc || "Syarat dan ketentuan kunjungan cagar budaya.",
-    endpoint: "http://localhost:8000/api/kebudayaan/upload/izin-berkunjung", 
+    // ✅ GUNAKAN API_BASE_URL
+    endpoint: `${API_BASE_URL}/public/kebudayaan/upload/izin-berkunjung`, 
   };
 
   return (
@@ -422,7 +427,7 @@ export default function LayananIzinBerkunjung() {
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                               <CheckCircle className="text-blue-500" size={20}/>
-                                              Syarat Pengajuan
+                                              Syarat & Ketentuan
                                           </h3>
                                       </div>
                                       <ul className="space-y-3">
@@ -436,7 +441,7 @@ export default function LayananIzinBerkunjung() {
                                               )
                                             ))
                                           ) : (
-                                            <p className="text-sm text-slate-400 italic">Belum ada data persyaratan.</p>
+                                            <p className="text-sm text-slate-400 italic">Tidak ada persyaratan khusus.</p>
                                           )}
                                       </ul>
                                   </div>
@@ -456,7 +461,7 @@ export default function LayananIzinBerkunjung() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -492,10 +497,10 @@ export default function LayananIzinBerkunjung() {
                                 <h3 className="text-xl font-bold text-slate-800">Jadwal Kunjungan Situs</h3>
                                 <p className="text-sm text-slate-400">Waktu operasional Cagar Budaya dan Museum.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
@@ -537,7 +542,7 @@ export default function LayananIzinBerkunjung() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
                           {/* Link Peta */}
                           {data.mapLink && (
@@ -652,10 +657,10 @@ export default function LayananIzinBerkunjung() {
                         <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
                             <ContactIconService className="text-yellow-400" size={20} />
                         </div>
-                        {data.contactSectionTitle || "Kontak Petugas"}
+                        {data.contactSectionTitle || "Kontak Informasi"}
                     </h3>
                     <p className="text-sm text-slate-400 leading-relaxed">
-                        {data.contactSectionDesc || "Hubungi kami untuk informasi kunjungan rombongan."}
+                        {data.contactSectionDesc || "Butuh bantuan? Hubungi kami."}
                     </p>
                 </div>
 
@@ -668,7 +673,7 @@ export default function LayananIzinBerkunjung() {
                             </div>
                             <div>
                             <p className="text-[10px] text-yellow-200 uppercase font-bold tracking-wider mb-0.5">
-                                {contact.name || "Koordinator"}
+                                {contact.name || "Resepsionis"}
                             </p>
                             <p className="font-bold text-lg tracking-wide">
                                 {contact.number}
@@ -677,9 +682,9 @@ export default function LayananIzinBerkunjung() {
                         </div>
                       ))
                   ) : (
-                     <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
+                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
                         Belum ada kontak tersedia.
-                     </div>
+                      </div>
                   )}
                 </div>
               </motion.div>

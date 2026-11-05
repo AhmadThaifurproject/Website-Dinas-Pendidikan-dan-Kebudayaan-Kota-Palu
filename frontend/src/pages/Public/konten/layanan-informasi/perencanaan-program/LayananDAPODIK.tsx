@@ -29,6 +29,10 @@ import {
   HelpCircle
 } from "lucide-react";
 
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 // --- TIPE DATA DARI BACKEND (Sesuai Admin) ---
 interface ContentData {
   layanan: string;
@@ -112,8 +116,8 @@ export default function LayananDAPODIK() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Endpoint disesuaikan untuk perencanaan / dapodik
-        const response = await fetch("http://localhost:8000/api/perencanaan/content/dapodik");
+        // ✅ GANTI DENGAN API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/perencanaan/content/dapodik`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -215,7 +219,7 @@ export default function LayananDAPODIK() {
 
   // --- FALLBACK DATA & PREPARATION ---
   const data: ContentData = content || {
-    layanan: "dapodikp", 
+    layanan: "dapodik", 
     isPersyaratanActive: false,
     isAlurActive: false,
     persyaratan: [],
@@ -243,10 +247,11 @@ export default function LayananDAPODIK() {
   const ContactIconService = getContactIconComponent(data.contactSectionIcon);
 
   // Props untuk LayananViewer (Dinamic from Admin)
+  // ✅ GANTI DENGAN API_BASE_URL
   const viewerProps = {
     judul: data.previewSectionTitle || "Panduan Aplikasi DAPODIK",
     deskripsi: data.previewSectionDesc || "Petunjuk teknis penginputan dan sinkronisasi Data Pokok Pendidikan.",
-    endpoint: "http://localhost:8000/api/perencanaan/upload/dapodik", 
+    endpoint: `${API_BASE_URL}/public/perencanaan/upload/dapodik`, 
   };
 
   return (
@@ -296,7 +301,6 @@ export default function LayananDAPODIK() {
               Pusat informasi, verifikasi data, dan sinkronisasi Data Pokok Pendidikan sekolah.
             </motion.p>
             
-
              <motion.div 
                initial={{ width: 0 }}
                animate={{ width: "6rem" }}
@@ -420,7 +424,7 @@ export default function LayananDAPODIK() {
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                               <CheckCircle className="text-blue-500" size={20}/>
-                                              Syarat Data
+                                              Data Diperlukan
                                           </h3>
                                       </div>
                                       <ul className="space-y-3">
@@ -454,7 +458,7 @@ export default function LayananDAPODIK() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -490,10 +494,10 @@ export default function LayananDAPODIK() {
                                 <h3 className="text-xl font-bold text-slate-800">Jadwal Pelayanan Perencanaan</h3>
                                 <p className="text-sm text-slate-400">Waktu pelayanan tatap muka di bagian perencanaan / helpdesk Dapodik.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
@@ -535,7 +539,7 @@ export default function LayananDAPODIK() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
                           {/* Link Peta */}
                           {data.mapLink && (
@@ -564,7 +568,7 @@ export default function LayananDAPODIK() {
                 {isUpdating && <UpdatingOverlay />}
               </AnimatePresence>
 
-              {/* 2. CTA BUTTON */}
+              {/* 2. CTA BUTTON (Portal Dapodik) */}
               <AnimatePresence mode="popLayout">
                 {data.portalVisible && (
                     <motion.div
@@ -583,7 +587,7 @@ export default function LayananDAPODIK() {
                       >
                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                         <Globe className="relative z-10" size={20}/>
-                        <span className="relative z-10">{data.portalLabel || "Akses Aplikasi"}</span>
+                        <span className="relative z-10">{data.portalLabel || "Akses Dapodik Online"}</span>
                         <ArrowRight className="group-hover:translate-x-1 transition-transform relative z-10" size={20} />
                       </a>
                     </motion.div>
@@ -616,7 +620,7 @@ export default function LayananDAPODIK() {
                     data.downloads.map((file, index) => (
                       <a key={index} href={file.url} target="_blank" rel="noreferrer" className="flex items-center justify-between p-4 bg-slate-50 hover:bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group cursor-pointer">
                         <div className="flex items-center gap-4 overflow-hidden">
-                          <div className="w-10 h-10 bg-white text-emerald-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
+                          <div className="w-10 h-10 bg-white text-rose-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
                             <FileText size={20} />
                           </div>
                           <span className="text-sm font-medium text-slate-700 truncate group-hover:text-indigo-700 transition">
@@ -629,7 +633,7 @@ export default function LayananDAPODIK() {
                   ) : (
                       <div className="py-6 text-center px-4">
                         <p className="text-sm text-slate-500 italic font-medium">
-                            Belum ada dokumen yang tersedia.
+                            Belum ada dokumen yang tersedia untuk diunduh saat ini.
                         </p>
                       </div>
                   )}
@@ -650,10 +654,10 @@ export default function LayananDAPODIK() {
                         <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
                             <ContactIconService className="text-yellow-400" size={20} />
                         </div>
-                        {data.contactSectionTitle || "Kontak Admin"}
+                        {data.contactSectionTitle || "Kontak Helpdesk"}
                     </h3>
                     <p className="text-sm text-slate-400 leading-relaxed">
-                        {data.contactSectionDesc || "Ada kendala sinkronisasi data? Hubungi kami."}
+                        {data.contactSectionDesc || "Mengalami kendala sinkronisasi? Hubungi tim teknis."}
                     </p>
                 </div>
 
@@ -675,9 +679,9 @@ export default function LayananDAPODIK() {
                         </div>
                       ))
                   ) : (
-                     <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
+                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
                         Belum ada kontak tersedia.
-                     </div>
+                      </div>
                   )}
                 </div>
               </motion.div>

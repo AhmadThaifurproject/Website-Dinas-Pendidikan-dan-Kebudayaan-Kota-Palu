@@ -25,6 +25,10 @@ import {
   Layers
 } from "lucide-react";
 
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 // --- TIPE DATA DARI BACKEND (Standar Konsisten) ---
 interface ContentData {
   layanan: string;
@@ -104,8 +108,8 @@ export default function LayananDanaDak() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Endpoint disesuaikan untuk Dana DAK PAUD
-        const response = await fetch("http://localhost:8000/api/paud/content/dak");
+        // ✅ GUNAKAN API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/paud/content/dak`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -144,11 +148,11 @@ export default function LayananDanaDak() {
   }, [initialLoading]); 
 
   // --- VIEWER PROPS ---
-  // Endpoint disesuaikan untuk upload/viewer Dana DAK
+  // ✅ GUNAKAN API_BASE_URL
   const viewerProps = {
     judul: "Dokumen Dana DAK",
     deskripsi: "Dokumen teknis penyaluran, penggunaan, dan pelaporan Dana Alokasi Khusus.",
-    endpoint: "http://localhost:8000/api/paud/upload/dak", 
+    endpoint: `${API_BASE_URL}/public/paud/upload/dak`, 
   };
 
   // --- HELPER FUNCTIONS ---
@@ -357,15 +361,15 @@ export default function LayananDanaDak() {
                                     <FileText size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-slate-800">Pratinjau</h3>
+                                    <h3 className="text-xl font-bold text-slate-800">Pratinjau Dokumen</h3>
                                 </div>
                             </div>
 
                             {/* CONTAINER PREVIEWER */}
                             <div className="w-full h-[500px] bg-slate-50 rounded-2xl border border-slate-200 shadow-inner relative isolate overflow-hidden overscroll-contain transform-gpu z-0">
                                 <LayananViewer
-                                    judul="" 
-                                    deskripsi=""
+                                    judul={viewerProps.judul} 
+                                    deskripsi={viewerProps.deskripsi}
                                     endpoint={viewerProps.endpoint} 
                                 />
                             </div>
@@ -389,7 +393,7 @@ export default function LayananDanaDak() {
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                               <CheckCircle className="text-blue-500" size={20}/>
-                                              Syarat Penerima
+                                              Persyaratan Berkas
                                           </h3>
                                       </div>
                                       <ul className="space-y-3">
@@ -415,7 +419,7 @@ export default function LayananDanaDak() {
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                               <Briefcase className="text-indigo-500" size={20}/>
-                                              Alur Penyaluran
+                                              Alur Pelayanan
                                           </h3>
                                       </div>
                                       <div className="relative pl-6 border-l-2 border-slate-100 space-y-6">
@@ -423,7 +427,7 @@ export default function LayananDanaDak() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -457,12 +461,12 @@ export default function LayananDanaDak() {
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold text-slate-800">Jadwal Pelayanan</h3>
-                                <p className="text-sm text-slate-400">Informasi hari dan jam buka layanan konsultasi DAK.</p>
+                                <p className="text-sm text-slate-400">Informasi hari dan jam buka layanan.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
@@ -504,7 +508,7 @@ export default function LayananDanaDak() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
                           {/* Link Peta */}
                           {data.mapLink && (
@@ -571,7 +575,7 @@ export default function LayananDanaDak() {
                         <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
                             <Download size={20} />
                         </div>
-                        {data.downloadSectionTitle || "Area Download"}
+                        {data.downloadSectionTitle || "Juknis & Laporan"}
                     </h3>
                     {data.downloadSectionDesc && (
                       <p className="text-sm text-slate-500 leading-relaxed">
@@ -622,7 +626,7 @@ export default function LayananDanaDak() {
                         {data.contactSectionTitle || "Konsultasi DAK"}
                     </h3>
                     <p className="text-sm text-slate-400 leading-relaxed">
-                        {data.contactSectionDesc || "Butuh bantuan terkait DAK? Hubungi kami."}
+                        {data.contactSectionDesc || "Hubungi tim teknis untuk konsultasi penggunaan dana."}
                     </p>
                 </div>
 

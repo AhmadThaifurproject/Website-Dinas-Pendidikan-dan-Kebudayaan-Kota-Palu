@@ -25,6 +25,10 @@ import {
   RefreshCw // Icon untuk indikator sync
 } from "lucide-react";
 
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 // --- TIPE DATA DARI BACKEND ---
 interface ContentData {
   layanan: string;
@@ -102,8 +106,8 @@ export default function LayananPPDBPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Endpoint khusus PPDB
-        const response = await fetch("http://localhost:8000/api/sd/content/ppdb");
+        // ✅ GANTI DENGAN API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/sd/content/ppdb`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -142,10 +146,11 @@ export default function LayananPPDBPage() {
   }, [initialLoading]);
 
   // --- VIEWER PROPS ---
+  // ✅ GANTI DENGAN API_BASE_URL
   const viewerProps = {
     judul: "Juknis & Informasi PPDB",
     deskripsi: "Dokumen petunjuk teknis, zonasi, dan kuota penerimaan siswa baru.",
-    endpoint: "http://localhost:8000/api/sd/upload/ppdb",
+    endpoint: `${API_BASE_URL}/public/sd/upload/ppdb`,
   };
 
   // --- HELPER FUNCTIONS ---
@@ -366,7 +371,7 @@ export default function LayananPPDBPage() {
                                 <LayananViewer
                                     judul="" 
                                     deskripsi=""
-                                    endpoint={viewerProps.endpoint}
+                                    endpoint={viewerProps.endpoint} 
                                 />
                             </div>
                         </div>
@@ -382,7 +387,6 @@ export default function LayananPPDBPage() {
                           >
                             <div className="border-t border-slate-100"></div>
 
-                            {/* CONTAINER GRID: PERSYARATAN & ALUR */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 
                                 {/* 2. PERSYARATAN BERKAS (Dynamic & Toggleable) */}
@@ -416,7 +420,7 @@ export default function LayananPPDBPage() {
                                   <div className="space-y-5">
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                                              <GraduationCap className="text-indigo-500" size={20}/>
+                                              <Briefcase className="text-indigo-500" size={20}/>
                                               Alur Pendaftaran
                                           </h3>
                                       </div>
@@ -426,7 +430,7 @@ export default function LayananPPDBPage() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -438,11 +442,9 @@ export default function LayananPPDBPage() {
                                       </div>
                                   </div>
                                 )}
-
                             </div>
                           </motion.div>
                         )}
-
                       </motion.div>
                     )}
 
@@ -464,14 +466,13 @@ export default function LayananPPDBPage() {
                                 <h3 className="text-xl font-bold text-slate-800">Jadwal Posko PPDB</h3>
                                 <p className="text-sm text-slate-400">Informasi jam pelayanan pengaduan dan verifikasi berkas.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
-                                    
                                     {/* Hari */}
                                     <div className="flex items-center gap-4 mb-3 md:mb-0">
                                         <div className={`p-3 rounded-xl ${item.status === 'off' ? 'bg-rose-100 text-rose-600' : 'bg-blue-50 text-blue-600'}`}>
@@ -484,7 +485,6 @@ export default function LayananPPDBPage() {
                                             </div>
                                         </div>
                                     </div>
-
                                     {/* Jam */}
                                     <div className="flex flex-col md:items-end gap-1 pl-14 md:pl-0">
                                         {item.status !== 'off' ? (
@@ -511,28 +511,28 @@ export default function LayananPPDBPage() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
-                        {/* Catatan Tambahan */}
-                        <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-200 flex gap-4 items-start">
-                            <AlertCircle className="text-slate-400 shrink-0 mt-0.5" size={20} />
-                            <div className="text-sm text-slate-600 leading-relaxed">
-                                <span className="font-bold text-slate-800">Catatan:</span> Pastikan melakukan pendaftaran sesuai dengan zona tempat tinggal yang terdata di KK.
-                            </div>
-                        </div>
+                          {/* Catatan Tambahan */}
+                          <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-200 flex gap-4 items-start">
+                              <AlertCircle className="text-slate-400 shrink-0 mt-0.5" size={20} />
+                              <div className="text-sm text-slate-600 leading-relaxed">
+                                  <span className="font-bold text-slate-800">Catatan:</span> Pastikan melakukan pendaftaran sesuai dengan zona tempat tinggal yang terdata di KK.
+                              </div>
+                          </div>
 
-                         {/* Link Peta */}
-                         {data.mapLink && (
-                           <a 
-                             href={data.mapLink}
-                             target="_blank"
-                             rel="noreferrer"
-                             className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:underline mt-2"
-                           >
-                              <MapPin size={16} />
-                              Lihat Lokasi Posko PPDB
-                           </a>
-                         )}
+                           {/* Link Peta */}
+                           {data.mapLink && (
+                             <a 
+                               href={data.mapLink}
+                               target="_blank"
+                               rel="noreferrer"
+                               className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:underline mt-2"
+                             >
+                                <MapPin size={16} />
+                                Lihat Lokasi Posko PPDB
+                             </a>
+                           )}
 
                       </motion.div>
                     )}
@@ -551,7 +551,6 @@ export default function LayananPPDBPage() {
                transition={{ duration: 0.8, delay: 0.5 }}
                className="lg:w-1/3 flex flex-col gap-6 order-1 lg:order-2 lg:sticky lg:top-8 h-fit z-30 relative"
             >
-              
               {/* === OVERLAY UPDATE ANIMATION (Sidebar) === */}
               <AnimatePresence>
                 {isUpdating && <UpdatingOverlay />}
@@ -569,21 +568,21 @@ export default function LayananPPDBPage() {
                         transition={{ duration: 0.4, ease: "easeInOut" }}
                     >
                       <a
-                        href={data.portalUrl || "https://ppdb.kemdikbud.go.id/"} 
+                        href={data.portalUrl || "#"} 
                         target="_blank"
                         rel="noreferrer"
                         className="group w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-bold text-center text-lg shadow-xl shadow-blue-500/30 transition-all hover:-translate-y-1 flex items-center justify-center gap-3 relative overflow-hidden"
                       >
                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                         <Globe className="relative z-10" size={20}/>
-                        <span className="relative z-10">{data.portalLabel || "Portal PPDB Online"}</span>
+                        <span className="relative z-10">{data.portalLabel || "Buka Portal Data"}</span>
                         <ArrowRight className="group-hover:translate-x-1 transition-transform relative z-10" size={20} />
                       </a>
                     </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* 3. DOWNLOAD AREA (Layout Prop membuat dia naik otomatis dgn mulus) */}
+              {/* 3. DOWNLOAD AREA */}
               <motion.div 
                 layout 
                 transition={{ duration: 0.4, ease: "easeInOut" }}
@@ -595,14 +594,14 @@ export default function LayananPPDBPage() {
                     <Download size={20} />
                   </div>
                   {/* Judul Editable */}
-                  {data.downloadSectionTitle || "Panduan & Juknis"}
+                  {data.downloadSectionTitle || "Unduh Statistik"}
                 </h3>
                 <div className="space-y-4">
                   {data.downloads.length > 0 ? (
                     data.downloads.map((file, index) => (
                       <a key={index} href={file.url} target="_blank" rel="noreferrer" className="flex items-center justify-between p-4 bg-slate-50 hover:bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group cursor-pointer">
                         <div className="flex items-center gap-4 overflow-hidden">
-                          <div className="w-10 h-10 bg-white text-rose-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
+                          <div className="w-10 h-10 bg-white text-emerald-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
                             <FileText size={20} />
                           </div>
                           <span className="text-sm font-medium text-slate-700 truncate group-hover:text-indigo-700 transition">
@@ -622,7 +621,7 @@ export default function LayananPPDBPage() {
                 </div>
               </motion.div>
 
-              {/* 4. CONTACT CARD (Layout Prop membuat dia ikut naik) */}
+              {/* 4. CONTACT CARD */}
               <motion.div 
                 layout 
                 transition={{ duration: 0.4, ease: "easeInOut" }}
@@ -634,10 +633,10 @@ export default function LayananPPDBPage() {
                   <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
                     <Phone className="text-yellow-400" size={20} />
                   </div>
-                  {data.contactSectionTitle || "Kontak Panitia"}
+                  Kontak Layanan
                 </h3>
                 <p className="text-sm text-slate-400 mb-8 relative z-10 leading-relaxed">
-                  {data.contactSectionDesc || "Mengalami kendala saat pendaftaran online? Hubungi panitia PPDB."}
+                  Mengalami kendala sinkronisasi data sekolah? Hubungi operator kami.
                 </p>
                 <div className="relative z-10 space-y-3">
                   {data.contacts && data.contacts.length > 0 ? (

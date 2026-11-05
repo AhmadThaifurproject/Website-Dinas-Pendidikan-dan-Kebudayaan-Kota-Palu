@@ -25,6 +25,10 @@ import {
   RefreshCw // Icon untuk indikator sync
 } from "lucide-react";
 
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 // --- TIPE DATA DARI BACKEND ---
 interface ContentData {
   layanan: string;
@@ -102,8 +106,8 @@ export default function LayananSuketGantijazah() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Endpoint khusus Suket Ganti Ijazah
-        const response = await fetch("http://localhost:8000/api/sd/content/suket-gantijazah");
+        // ✅ GANTI DENGAN API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/sd/content/suket-gantijazah`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -142,10 +146,11 @@ export default function LayananSuketGantijazah() {
   }, [initialLoading]);
 
   // --- VIEWER PROPS ---
+  // ✅ GANTI DENGAN API_BASE_URL
   const viewerProps = {
     judul: "Format Surat Keterangan",
     deskripsi: "Contoh format surat keterangan pengganti ijazah dan surat pernyataan mutlak.",
-    endpoint: "http://localhost:8000/api/sd/upload/suket-gantijazah",
+    endpoint: `${API_BASE_URL}/public/sd/upload/suket-gantijazah`,
   };
 
   // --- HELPER FUNCTIONS ---
@@ -391,7 +396,7 @@ export default function LayananSuketGantijazah() {
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                               <CheckCircle className="text-blue-500" size={20}/>
-                                              Syarat Pengajuan
+                                              Syarat Legalisir
                                           </h3>
                                       </div>
                                       <ul className="space-y-3">
@@ -417,7 +422,7 @@ export default function LayananSuketGantijazah() {
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                               <Briefcase className="text-indigo-500" size={20}/>
-                                              Alur Penerbitan
+                                              Alur Pengajuan
                                           </h3>
                                       </div>
                                       
@@ -426,7 +431,7 @@ export default function LayananSuketGantijazah() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -438,11 +443,9 @@ export default function LayananSuketGantijazah() {
                                       </div>
                                   </div>
                                 )}
-
                             </div>
                           </motion.div>
                         )}
-
                       </motion.div>
                     )}
 
@@ -462,16 +465,15 @@ export default function LayananSuketGantijazah() {
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold text-slate-800">Jadwal Pelayanan</h3>
-                                <p className="text-sm text-slate-400">Waktu verifikasi dokumen dan penerbitan suket.</p>
+                                <p className="text-sm text-slate-400">Informasi hari dan jam buka layanan legalisir.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
-                                    
                                     {/* Hari */}
                                     <div className="flex items-center gap-4 mb-3 md:mb-0">
                                         <div className={`p-3 rounded-xl ${item.status === 'off' ? 'bg-rose-100 text-rose-600' : 'bg-blue-50 text-blue-600'}`}>
@@ -484,7 +486,6 @@ export default function LayananSuketGantijazah() {
                                             </div>
                                         </div>
                                     </div>
-
                                     {/* Jam */}
                                     <div className="flex flex-col md:items-end gap-1 pl-14 md:pl-0">
                                         {item.status !== 'off' ? (
@@ -511,32 +512,16 @@ export default function LayananSuketGantijazah() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
-                        {/* Catatan Tambahan */}
-                        <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-200 flex gap-4 items-start">
-                            <AlertCircle className="text-slate-400 shrink-0 mt-0.5" size={20} />
-                            <div className="text-sm text-slate-600 leading-relaxed">
-                                <span className="font-bold text-slate-800">Catatan:</span> Pelayanan tutup pada hari <strong>Libur Nasional</strong> dan <strong>Cuti Bersama</strong>.
-                            </div>
-                        </div>
-
-                         {/* Link Peta */}
-                         {data.mapLink && (
-                           <a 
-                             href={data.mapLink}
-                             target="_blank"
-                             rel="noreferrer"
-                             className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:underline mt-2"
-                           >
-                              <MapPin size={16} />
-                              Lihat Lokasi Kantor di Google Maps
+                          {/* Link Peta */}
+                          {data.mapLink && (
+                           <a href={data.mapLink} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:underline mt-2">
+                              <MapPin size={16} /> Lihat Lokasi Kantor di Google Maps
                            </a>
-                         )}
-
+                          )}
                       </motion.div>
                     )}
-
                   </AnimatePresence>
                 </div>
               </motion.div>
@@ -549,15 +534,14 @@ export default function LayananSuketGantijazah() {
                initial={{ opacity: 0, x: 20 }}
                animate={{ opacity: 1, x: 0 }}
                transition={{ duration: 0.8, delay: 0.5 }}
-               className="lg:w-1/3 flex flex-col gap-6 order-1 lg:order-2 lg:sticky lg:top-8 h-fit z-30"
+               className="lg:w-1/3 flex flex-col gap-6 order-1 lg:order-2 lg:sticky lg:top-8 h-fit z-30 relative"
             >
-              
-              {/* === OVERLAY UPDATE ANIMATION (Sidebar) === */}
+              {/* === OVERLAY UPDATE ANIMATION === */}
               <AnimatePresence>
                 {isUpdating && <UpdatingOverlay />}
               </AnimatePresence>
-              
-              {/* 2. CTA BUTTON (DINAMIS) */}
+
+              {/* 2. CTA BUTTON (Portal) */}
               <AnimatePresence mode="popLayout">
                 {data.portalVisible && (
                     <motion.div
@@ -569,34 +553,41 @@ export default function LayananSuketGantijazah() {
                         transition={{ duration: 0.4, ease: "easeInOut" }}
                     >
                       <a
-                        href={data.portalUrl || "https://nisn.data.kemdikbud.go.id/"} 
+                        href={data.portalUrl || "#"} 
                         target="_blank"
                         rel="noreferrer"
                         className="group w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-bold text-center text-lg shadow-xl shadow-blue-500/30 transition-all hover:-translate-y-1 flex items-center justify-center gap-3 relative overflow-hidden"
                       >
                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                         <Globe className="relative z-10" size={20}/>
-                        <span className="relative z-10">{data.portalLabel || "Cek NISN / Validitas"}</span>
+                        <span className="relative z-10">{data.portalLabel || "Cek Status Legalisir"}</span>
                         <ArrowRight className="group-hover:translate-x-1 transition-transform relative z-10" size={20} />
                       </a>
                     </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* 3. DOWNLOAD AREA (Layout Prop) */}
+              {/* 3. DOWNLOAD AREA */}
               <motion.div 
                 layout 
                 transition={{ duration: 0.4, ease: "easeInOut" }}
                 className="bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-slate-100 relative overflow-hidden"
               >
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400"></div>
-                <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-3">
-                  <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
-                    <Download size={20} />
-                  </div>
-                  {/* Judul Editable */}
-                  {data.downloadSectionTitle || "Formulir Pengajuan"}
-                </h3>
+                <div className="mb-6">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                            <Download size={20} />
+                        </div>
+                        {data.downloadSectionTitle || "Area Download"}
+                    </h3>
+                    {data.downloadSectionDesc && (
+                      <p className="text-sm text-slate-500 leading-relaxed">
+                          {data.downloadSectionDesc}
+                      </p>
+                    )}
+                </div>
+
                 <div className="space-y-4">
                   {data.downloads.length > 0 ? (
                     data.downloads.map((file, index) => (
@@ -622,7 +613,7 @@ export default function LayananSuketGantijazah() {
                 </div>
               </motion.div>
 
-              {/* 4. CONTACT CARD (Layout Prop) */}
+              {/* 4. CONTACT CARD */}
               <motion.div 
                 layout 
                 transition={{ duration: 0.4, ease: "easeInOut" }}
@@ -630,15 +621,19 @@ export default function LayananSuketGantijazah() {
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl translate-x-10 -translate-y-10 group-hover:bg-blue-500/30 transition-colors"></div>
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl -translate-x-10 translate-y-10"></div>
-                <h3 className="font-bold mb-4 flex items-center gap-3 relative z-10 text-white">
-                  <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
-                    <Phone className="text-yellow-400" size={20} />
-                  </div>
-                  Kontak Layanan
-                </h3>
-                <p className="text-sm text-slate-400 mb-8 relative z-10 leading-relaxed">
-                  Sekolah sudah tutup/merger? Hubungi dinas pendidikan segera.
-                </p>
+                
+                <div className="relative z-10 mb-8">
+                    <h3 className="font-bold mb-4 flex items-center gap-3 text-white">
+                        <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
+                            <Phone className="text-yellow-400" size={20} />
+                        </div>
+                        {data.contactSectionTitle || "Layanan Pelanggan"}
+                    </h3>
+                    <p className="text-sm text-slate-400 leading-relaxed">
+                        {data.contactSectionDesc || "Hubungi kami jika ada pertanyaan terkait legalisir."}
+                    </p>
+                </div>
+
                 <div className="relative z-10 space-y-3">
                   {data.contacts && data.contacts.length > 0 ? (
                       data.contacts.map((contact, i) => (

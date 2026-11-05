@@ -1,3 +1,4 @@
+// src/pages/Public/LayananPerencanaan/LayananBOS.tsx
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,6 +21,10 @@ import {
   Layout,
   RefreshCw 
 } from "lucide-react";
+
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE (Sesuai Referensi)
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 // --- TIPE DATA DARI BACKEND (Sama seperti referensi) ---
 interface ContentData {
@@ -100,8 +105,8 @@ export default function LayananBOS() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // PERUBAHAN: Endpoint disesuaikan ke SMP
-        const response = await fetch("http://localhost:8000/api/smp/content/bos");
+        // ✅ GANTI URL HARDCODED DENGAN API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/smp/content/bos`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -144,7 +149,8 @@ export default function LayananBOS() {
   const viewerProps = {
     judul: "Dokumen Bantuan Operasional Sekolah (BOS)",
     deskripsi: "Dokumen terkait penyaluran dan penggunaan dana BOS.",
-    endpoint: "http://localhost:8000/api/smp/upload/bos", 
+    // ✅ GANTI URL HARDCODED DENGAN API_BASE_URL
+    endpoint: `${API_BASE_URL}/public/smp/upload/bos`, 
   };
 
   // --- HELPER FUNCTIONS ---
@@ -419,7 +425,7 @@ export default function LayananBOS() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -455,10 +461,10 @@ export default function LayananBOS() {
                                 <h3 className="text-xl font-bold text-slate-800">Jadwal Pelayanan</h3>
                                 <p className="text-sm text-slate-400">Informasi hari dan jam buka layanan tatap muka.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
@@ -500,7 +506,7 @@ export default function LayananBOS() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
                           {/* Link Peta */}
                           {data.mapLink && (
@@ -641,7 +647,7 @@ export default function LayananBOS() {
                       ))
                   ) : (
                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
-                        Belum ada kontak tersedia.
+                       Belum ada kontak tersedia.
                      </div>
                   )}
                 </div>

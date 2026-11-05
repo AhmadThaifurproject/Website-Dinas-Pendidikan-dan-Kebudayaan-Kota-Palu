@@ -25,6 +25,10 @@ import {
   RefreshCw // Icon untuk indikator sync
 } from "lucide-react";
 
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 // --- TIPE DATA DARI BACKEND ---
 interface ContentData {
   layanan: string;
@@ -102,8 +106,8 @@ export default function LayananSapras() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Endpoint khusus Sapras
-        const response = await fetch("http://localhost:8000/api/sd/content/sapras");
+        // ✅ GANTI DENGAN API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/sd/content/sapras`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -142,10 +146,11 @@ export default function LayananSapras() {
   }, [initialLoading]);
 
   // --- VIEWER PROPS ---
+  // ✅ GANTI DENGAN API_BASE_URL
   const viewerProps = {
     judul: "Data & Dokumen Sarana Prasarana",
     deskripsi: "Dokumen teknis, denah, dan data kerusakan fasilitas sekolah.",
-    endpoint: "http://localhost:8000/api/sd/upload/sapras",
+    endpoint: `${API_BASE_URL}/public/sd/upload/sapras`,
   };
 
   // --- HELPER FUNCTIONS ---
@@ -213,6 +218,8 @@ export default function LayananSapras() {
     portalUrl: "",
     portalLabel: "Input Data Sapras (Dapodik)",
     downloadSectionTitle: "Dokumen Juknis Sapras",
+    contactSectionTitle: "Kontak Layanan",
+    contactSectionDesc: "Laporan kerusakan berat atau bencana alam? Hubungi tim Sapras.",
     contacts: []
   };
 
@@ -357,8 +364,8 @@ export default function LayananSapras() {
                                     <FileText size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-slate-800">Pratinjau Data Sapras</h3>
-                                    <p className="text-sm text-slate-400">Silakan cek dokumen data fasilitas sebelum mengajukan.</p>
+                                    <h3 className="text-xl font-bold text-slate-800">Pratinjau Dokumen</h3>
+                                    <p className="text-sm text-slate-400">Contoh format proposal pengajuan rehabilitasi.</p>
                                 </div>
                             </div>
 
@@ -366,7 +373,7 @@ export default function LayananSapras() {
                                 <LayananViewer
                                     judul="" 
                                     deskripsi=""
-                                    endpoint={viewerProps.endpoint}
+                                    endpoint={viewerProps.endpoint} 
                                 />
                             </div>
                         </div>
@@ -382,7 +389,6 @@ export default function LayananSapras() {
                           >
                             <div className="border-t border-slate-100"></div>
 
-                            {/* CONTAINER GRID: PERSYARATAN & ALUR */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 
                                 {/* 2. PERSYARATAN BERKAS (Dynamic & Toggleable) */}
@@ -391,7 +397,7 @@ export default function LayananSapras() {
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                               <CheckCircle className="text-blue-500" size={20}/>
-                                              Syarat Pengajuan Bantuan
+                                              Syarat Pengajuan
                                           </h3>
                                       </div>
                                       <ul className="space-y-3">
@@ -426,7 +432,7 @@ export default function LayananSapras() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -438,11 +444,9 @@ export default function LayananSapras() {
                                       </div>
                                   </div>
                                 )}
-
                             </div>
                           </motion.div>
                         )}
-
                       </motion.div>
                     )}
 
@@ -462,16 +466,15 @@ export default function LayananSapras() {
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold text-slate-800">Jadwal Pelayanan</h3>
-                                <p className="text-sm text-slate-400">Informasi hari dan jam buka layanan verifikasi Sapras.</p>
+                                <p className="text-sm text-slate-400">Informasi hari dan jam buka layanan konsultasi Sapras.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
-                                    
                                     {/* Hari */}
                                     <div className="flex items-center gap-4 mb-3 md:mb-0">
                                         <div className={`p-3 rounded-xl ${item.status === 'off' ? 'bg-rose-100 text-rose-600' : 'bg-blue-50 text-blue-600'}`}>
@@ -484,7 +487,6 @@ export default function LayananSapras() {
                                             </div>
                                         </div>
                                     </div>
-
                                     {/* Jam */}
                                     <div className="flex flex-col md:items-end gap-1 pl-14 md:pl-0">
                                         {item.status !== 'off' ? (
@@ -511,28 +513,28 @@ export default function LayananSapras() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
-                        {/* Catatan Tambahan */}
-                        <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-200 flex gap-4 items-start">
-                            <AlertCircle className="text-slate-400 shrink-0 mt-0.5" size={20} />
-                            <div className="text-sm text-slate-600 leading-relaxed">
-                                <span className="font-bold text-slate-800">Catatan:</span> Survei lapangan dilakukan berdasarkan jadwal yang telah disepakati.
-                            </div>
-                        </div>
+                          {/* Catatan Tambahan */}
+                          <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-200 flex gap-4 items-start">
+                              <AlertCircle className="text-slate-400 shrink-0 mt-0.5" size={20} />
+                              <div className="text-sm text-slate-600 leading-relaxed">
+                                  <span className="font-bold text-slate-800">Catatan:</span> Pelayanan data tutup pada hari <strong>Libur Nasional</strong> dan <strong>Cuti Bersama</strong>.
+                              </div>
+                          </div>
 
-                         {/* Link Peta */}
-                         {data.mapLink && (
-                           <a 
-                             href={data.mapLink}
-                             target="_blank"
-                             rel="noreferrer"
-                             className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:underline mt-2"
-                           >
-                              <MapPin size={16} />
-                              Lihat Lokasi Kantor di Google Maps
-                           </a>
-                         )}
+                           {/* Link Peta */}
+                           {data.mapLink && (
+                             <a 
+                               href={data.mapLink}
+                               target="_blank"
+                               rel="noreferrer"
+                               className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:underline mt-2"
+                             >
+                                <MapPin size={16} />
+                                Lihat Lokasi Kantor di Google Maps
+                             </a>
+                           )}
 
                       </motion.div>
                     )}
@@ -551,7 +553,7 @@ export default function LayananSapras() {
                transition={{ duration: 0.8, delay: 0.5 }}
                className="lg:w-1/3 flex flex-col gap-6 order-1 lg:order-2 lg:sticky lg:top-8 h-fit z-30 relative"
             >
-              {/* === OVERLAY UPDATE ANIMATION === */}
+              {/* === OVERLAY UPDATE ANIMATION (Sidebar) === */}
               <AnimatePresence>
                 {isUpdating && <UpdatingOverlay />}
               </AnimatePresence>
@@ -568,7 +570,7 @@ export default function LayananSapras() {
                         transition={{ duration: 0.4, ease: "easeInOut" }}
                     >
                       <a
-                        href={data.portalUrl || "http://dapo.kemdikbud.go.id/sp"} 
+                        href={data.portalUrl || "#"} 
                         target="_blank"
                         rel="noreferrer"
                         className="group w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-bold text-center text-lg shadow-xl shadow-blue-500/30 transition-all hover:-translate-y-1 flex items-center justify-center gap-3 relative overflow-hidden"
@@ -582,26 +584,33 @@ export default function LayananSapras() {
                 )}
               </AnimatePresence>
 
-              {/* 3. DOWNLOAD AREA (Layout Prop membuat dia naik otomatis dgn mulus) */}
+              {/* 3. DOWNLOAD AREA */}
               <motion.div 
                 layout 
                 transition={{ duration: 0.4, ease: "easeInOut" }}
                 className="bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-slate-100 relative overflow-hidden"
               >
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400"></div>
-                <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-3">
-                  <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
-                    <Download size={20} />
-                  </div>
-                  {/* Judul Editable */}
-                  {data.downloadSectionTitle || "Dokumen Juknis Sapras"}
-                </h3>
+                <div className="mb-6">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                            <Download size={20} />
+                        </div>
+                        {data.downloadSectionTitle || "Dokumen Juknis Sapras"}
+                    </h3>
+                    {data.downloadSectionDesc && (
+                      <p className="text-sm text-slate-500 leading-relaxed">
+                          {data.downloadSectionDesc}
+                      </p>
+                    )}
+                </div>
+
                 <div className="space-y-4">
                   {data.downloads.length > 0 ? (
                     data.downloads.map((file, index) => (
                       <a key={index} href={file.url} target="_blank" rel="noreferrer" className="flex items-center justify-between p-4 bg-slate-50 hover:bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group cursor-pointer">
                         <div className="flex items-center gap-4 overflow-hidden">
-                          <div className="w-10 h-10 bg-white text-rose-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
+                          <div className="w-10 h-10 bg-white text-emerald-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
                             <FileText size={20} />
                           </div>
                           <span className="text-sm font-medium text-slate-700 truncate group-hover:text-indigo-700 transition">
@@ -614,14 +623,14 @@ export default function LayananSapras() {
                   ) : (
                       <div className="py-6 text-center px-4">
                         <p className="text-sm text-slate-500 italic font-medium">
-                            Tidak ada file juknis.
+                            Belum ada dokumen yang tersedia.
                         </p>
                       </div>
                   )}
                 </div>
               </motion.div>
 
-              {/* 4. CONTACT CARD (Layout Prop membuat dia ikut naik) */}
+              {/* 4. CONTACT CARD */}
               <motion.div 
                 layout 
                 transition={{ duration: 0.4, ease: "easeInOut" }}
@@ -629,15 +638,19 @@ export default function LayananSapras() {
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl translate-x-10 -translate-y-10 group-hover:bg-blue-500/30 transition-colors"></div>
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl -translate-x-10 translate-y-10"></div>
-                <h3 className="font-bold mb-4 flex items-center gap-3 relative z-10 text-white">
-                  <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
-                    <Phone className="text-yellow-400" size={20} />
-                  </div>
-                  Kontak Layanan
-                </h3>
-                <p className="text-sm text-slate-400 mb-8 relative z-10 leading-relaxed">
-                  Laporan kerusakan berat atau bencana alam? Hubungi tim Sapras.
-                </p>
+                
+                <div className="relative z-10 mb-8">
+                    <h3 className="font-bold mb-4 flex items-center gap-3 text-white">
+                        <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
+                            <Phone className="text-yellow-400" size={20} />
+                        </div>
+                        {data.contactSectionTitle || "Kontak Layanan"}
+                    </h3>
+                    <p className="text-sm text-slate-400 leading-relaxed">
+                        {data.contactSectionDesc || "Laporan kerusakan berat atau bencana alam? Hubungi tim Sapras."}
+                    </p>
+                </div>
+
                 <div className="relative z-10 space-y-3">
                   {data.contacts && data.contacts.length > 0 ? (
                       data.contacts.map((contact, i) => (

@@ -1,45 +1,35 @@
 import React from "react";
-import { Newspaper, Image, Layout, Menu, Phone } from "lucide-react";
+import { Newspaper, Image, Layout, Menu, Phone, UserCog, Calendar } from "lucide-react"; // Tambahkan Calendar
 
-// 1. Definisikan Tipe Props
 interface PengaturanProps {
   setActiveMenu: (menu: string) => void;
 }
 
-// 2. Terima Props di komponen
 export default function Pengaturan({ setActiveMenu }: PengaturanProps) {
   
   const menus = [
+    
     {
-      title: "Berita Publikasi",
-      desc: "Atur berita populer & terkini yang muncul di halaman utama.",
-      icon: <Newspaper className="w-10 h-10 text-blue-500" />,
-      action: "berita" // Opsional: jika mau link ke berita
+      title: "Kalender Pendidikan", // Menu Baru
+      desc: "Kelola agenda akademik, hari libur, dan berita acara publik.",
+      icon: <Calendar className="w-10 h-10 text-emerald-500" />,
+      action: "kontrol-kalender" 
+    },
+    {
+      title: "Profil Pejabat",
+      desc: "Kelola data pimpinan, kepala bidang, dan struktur organisasi.",
+      icon: <UserCog className="w-10 h-10 text-indigo-500" />,
+      action: "profil-pejabat" 
     },
     {
       title: "Poster & Edukasi",
       desc: "Kelola poster kegiatan dan materi edukasi untuk publik.",
       icon: <Image className="w-10 h-10 text-purple-500" />,
-      action: "agenda" // <--- INI KUNCINYA (Sesuai dengan case di DashboardAdmin)
+      action: "agenda" 
     },
-    {
-      title: "Banner Utama",
-      desc: "Ubah gambar dan teks banner utama pada halaman publik.",
-      icon: <Layout className="w-10 h-10 text-green-500" />,
-      action: "" // Belum ada halaman
-    },
-    {
-      title: "Navigasi Menu",
-      desc: "Sesuaikan menu navigasi header pada website publik.",
-      icon: <Menu className="w-10 h-10 text-orange-500" />,
-      action: "" // Belum ada halaman
-    },
-    {
-      title: "Footer & Kontak",
-      desc: "Update alamat, sosial media, dan kontak resmi.",
-      icon: <Phone className="w-10 h-10 text-red-500" />,
-      action: "" // Belum ada halaman
-    },
+  
+   
+   
   ];
 
   return (
@@ -51,7 +41,6 @@ export default function Pengaturan({ setActiveMenu }: PengaturanProps) {
         {menus.map((menu, i) => (
           <div
             key={i}
-            // 3. Tambahkan onClick Handler
             onClick={() => {
               if (menu.action) {
                 setActiveMenu(menu.action);

@@ -22,7 +22,11 @@ import {
   RefreshCw 
 } from "lucide-react";
 
-// --- TIPE DATA DARI BACKEND (Sesuai Standar Baru) ---
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+// --- TIPE DATA DARI BACKEND ---
 interface ContentData {
   layanan: string;
   isPersyaratanActive: boolean;
@@ -101,8 +105,8 @@ export default function DanaBosSapen() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Endpoint disesuaikan untuk Dana BOS Sapen
-        const response = await fetch("http://localhost:8000/api/paud/content/bos-satuan-pendidikan");
+        // ✅ GANTI DENGAN API_BASE_URL (Bagian 1)
+        const response = await fetch(`${API_BASE_URL}/public/paud/content/bos-satuan-pendidikan`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -141,11 +145,11 @@ export default function DanaBosSapen() {
   }, [initialLoading]); 
 
   // --- VIEWER PROPS ---
-  // Endpoint disesuaikan untuk upload/viewer Dana BOS Sapen
   const viewerProps = {
-    judul: "Dokumen Dana BOS Sapen",
-    deskripsi: "Dokumen terkait pengelolaan dan transparansi Dana BOS Sapen.",
-    endpoint: "http://localhost:8000/api/paud/upload/bos-satuan-pendidikan", 
+    judul: "Dokumen Bantuan Operasional (BOS/BOP)",
+    deskripsi: "Dokumen teknis penyaluran dana operasional untuk lembaga PAUD & PNF.",
+    // ✅ GANTI DENGAN API_BASE_URL (Bagian 2)
+    endpoint: `${API_BASE_URL}/public/paud/upload/bos-satuan-pendidikan`,
   };
 
   // --- HELPER FUNCTIONS ---
@@ -186,7 +190,7 @@ export default function DanaBosSapen() {
         <div className="flex flex-col items-center gap-4">
             <div className="relative">
                 <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-                <div className="absolute inset-0 flex items-center justify-center text-blue-600 font-bold text-xs">PAUD</div>
+                <div className="absolute inset-0 flex items-center justify-center text-blue-600 font-bold text-[10px]">PAUD</div>
             </div>
             <p className="text-slate-500 font-medium animate-pulse">Memuat data layanan...</p>
         </div>
@@ -196,7 +200,7 @@ export default function DanaBosSapen() {
 
   // --- FALLBACK DATA ---
   const data: ContentData = content || {
-    layanan: "dana-bos-sapen", 
+    layanan: "bos-paud", 
     isPersyaratanActive: false,
     isAlurActive: false,
     persyaratan: [],
@@ -208,11 +212,11 @@ export default function DanaBosSapen() {
     tabIcon: "FileText",
     portalVisible: false,
     portalUrl: "",
-    portalLabel: "Buka Portal",
+    portalLabel: "Buka Portal BOP",
     downloadSectionTitle: "Area Download",
-    downloadSectionDesc: "Silakan unduh dokumen yang dibutuhkan.",
+    downloadSectionDesc: "Unduh juknis dan format laporan BOS/BOP.",
     contactSectionTitle: "Kontak Layanan",
-    contactSectionDesc: "Hubungi tim teknis kami jika ada kendala.",
+    contactSectionDesc: "Hubungi bidang PAUD & PNF jika ada kendala.",
     contacts: []
   };
 
@@ -240,7 +244,7 @@ export default function DanaBosSapen() {
               <Link to="/" className="hover:text-white transition-colors duration-300">Beranda</Link>
               <span className="text-slate-500">•</span>
               <Link to="/paud" className="text-blue-400 hover:text-white transition-colors duration-300">
-                Layanan Paud & PNF
+                Layanan PAUD & PNF
               </Link>
             </motion.div>
 
@@ -252,7 +256,7 @@ export default function DanaBosSapen() {
             >
               Layanan <br className="hidden md:block"/> 
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 animate-gradient-x">
-                Dana BOS Sapen
+                Bantuan Operasional Sekolah
               </span>
             </motion.h1>
 
@@ -262,9 +266,9 @@ export default function DanaBosSapen() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="text-slate-300 text-lg max-w-2xl mx-auto font-light leading-relaxed mb-8"
             >
-              Informasi lengkap, transparansi anggaran, dan berkas terkait Dana BOS Sapen.
+              Informasi lengkap, alur pencairan, dan pelaporan dana operasional untuk PAUD & PNF.
             </motion.p>
-
+            
              <motion.div 
                initial={{ width: 0 }}
                animate={{ width: "6rem" }}
@@ -351,15 +355,15 @@ export default function DanaBosSapen() {
                                     <FileText size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-slate-800">Pratinjau</h3>
+                                    <h3 className="text-xl font-bold text-slate-800">Pratinjau Dokumen</h3>
                                 </div>
                             </div>
 
                             {/* CONTAINER PREVIEWER */}
                             <div className="w-full h-[500px] bg-slate-50 rounded-2xl border border-slate-200 shadow-inner relative isolate overflow-hidden overscroll-contain transform-gpu z-0">
                                 <LayananViewer
-                                    judul="" 
-                                    deskripsi=""
+                                    judul={viewerProps.judul} 
+                                    deskripsi={viewerProps.deskripsi}
                                     endpoint={viewerProps.endpoint} 
                                 />
                             </div>
@@ -383,7 +387,7 @@ export default function DanaBosSapen() {
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                               <CheckCircle className="text-blue-500" size={20}/>
-                                              Persyaratan Berkas
+                                              Persyaratan
                                           </h3>
                                       </div>
                                       <ul className="space-y-3">
@@ -409,7 +413,7 @@ export default function DanaBosSapen() {
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                               <Briefcase className="text-indigo-500" size={20}/>
-                                              Alur Singkat
+                                              Alur / Tahapan
                                           </h3>
                                       </div>
                                       <div className="relative pl-6 border-l-2 border-slate-100 space-y-6">
@@ -417,7 +421,7 @@ export default function DanaBosSapen() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -451,12 +455,12 @@ export default function DanaBosSapen() {
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold text-slate-800">Jadwal Pelayanan</h3>
-                                <p className="text-sm text-slate-400">Informasi hari dan jam buka layanan tatap muka.</p>
+                                <p className="text-sm text-slate-400">Informasi hari dan jam buka layanan.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
@@ -498,7 +502,7 @@ export default function DanaBosSapen() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
                           {/* Link Peta */}
                           {data.mapLink && (
@@ -579,7 +583,7 @@ export default function DanaBosSapen() {
                     data.downloads.map((file, index) => (
                       <a key={index} href={file.url} target="_blank" rel="noreferrer" className="flex items-center justify-between p-4 bg-slate-50 hover:bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group cursor-pointer">
                         <div className="flex items-center gap-4 overflow-hidden">
-                          <div className="w-10 h-10 bg-white text-rose-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
+                          <div className="w-10 h-10 bg-white text-emerald-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
                             <FileText size={20} />
                           </div>
                           <span className="text-sm font-medium text-slate-700 truncate group-hover:text-indigo-700 transition">
@@ -592,7 +596,7 @@ export default function DanaBosSapen() {
                   ) : (
                       <div className="py-6 text-center px-4">
                         <p className="text-sm text-slate-500 italic font-medium">
-                            Belum ada dokumen yang tersedia untuk diunduh saat ini.
+                            Belum ada dokumen yang tersedia.
                         </p>
                       </div>
                   )}
@@ -616,7 +620,7 @@ export default function DanaBosSapen() {
                         {data.contactSectionTitle || "Kontak Layanan"}
                     </h3>
                     <p className="text-sm text-slate-400 leading-relaxed">
-                        {data.contactSectionDesc || "Mengalami kendala terkait layanan ini? Hubungi tim teknis kami."}
+                        {data.contactSectionDesc || "Hubungi tim teknis kami jika ada kendala."}
                     </p>
                 </div>
 

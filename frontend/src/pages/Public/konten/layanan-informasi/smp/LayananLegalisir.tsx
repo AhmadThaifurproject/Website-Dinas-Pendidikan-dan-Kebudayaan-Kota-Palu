@@ -1,3 +1,4 @@
+// src/pages/Public/LayananLegalisir/LayananLegalisir.tsx
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,6 +22,10 @@ import {
   RefreshCw,
   ClipboardList // Icon relevan untuk Legalisir
 } from "lucide-react";
+
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 // --- TIPE DATA DARI BACKEND (Sesuai Referensi) ---
 interface ContentData {
@@ -101,8 +106,8 @@ export default function LayananLegalisir() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // PERUBAHAN: Endpoint diarahkan ke 'legalisir'
-        const response = await fetch("http://localhost:8000/api/smp/content/legalisir");
+        // ✅ PERUBAHAN: Endpoint dinamis menggunakan API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/smp/content/legalisir`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -141,11 +146,12 @@ export default function LayananLegalisir() {
   }, [initialLoading]); 
 
   // --- VIEWER PROPS ---
-  // Endpoint Upload khusus Legalisir
+  // Endpoint Upload khusus Legalisir (Dinamis)
   const viewerProps = {
     judul: "Layanan Legalisir Ijazah",
     deskripsi: "Panduan dan dokumen terkait proses legalisir ijazah.",
-    endpoint: "http://localhost:8000/api/smp/upload/legalisir", 
+    // ✅ PERUBAHAN: Endpoint dinamis
+    endpoint: `${API_BASE_URL}/public/smp/upload/legalisir`, 
   };
 
   // --- HELPER FUNCTIONS ---
@@ -420,7 +426,7 @@ export default function LayananLegalisir() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -456,10 +462,10 @@ export default function LayananLegalisir() {
                                 <h3 className="text-xl font-bold text-slate-800">Jadwal Pelayanan</h3>
                                 <p className="text-sm text-slate-400">Waktu pelayanan loket legalisir tatap muka.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
@@ -501,7 +507,7 @@ export default function LayananLegalisir() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
                           {/* Link Peta */}
                           {data.mapLink && (
@@ -642,7 +648,7 @@ export default function LayananLegalisir() {
                       ))
                   ) : (
                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
-                        Belum ada kontak tersedia.
+                       Belum ada kontak tersedia.
                      </div>
                   )}
                 </div>

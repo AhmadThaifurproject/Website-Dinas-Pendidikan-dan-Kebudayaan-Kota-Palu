@@ -2,15 +2,23 @@
 import React, { useState } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 
+// --- Systems ---
+import NotFound from './feature/auth/features/NotFound';
+import StealthRoute from './components/Feedback/StealthRoute';
+
+
 // --- COMPONENTS & LAYOUT ---
-import Navbar from "./components/Layout/Navbar/Navbar.tsx";
-import Footer from "./components/Layout/Footer/Footer.tsx";
+import PublicLayout from "@/components/Layout/PublicLayout";
 
 // --- HOMEPAGE  ---
 import HomePage from "./pages/Public/Home/homepage"; 
 
 // --- AUTH ---
-import FormLoginTW from "./feature/auth/FormLoginTW.tsx";
+import Login from "./feature/auth/loginpage.tsx";
+
+// --- Profil Admin ---
+import ProfilAvatar from "./pages/Admin/components/profil/components/ProfilAvatar";
+import ChangePassword from "./pages/Admin/components/profil/components/ChangePassword";
 
 // --- PAGES: PUBLIC (PROFIL) ---
 import ProfilePage from "./pages/Public/konten/Profil/ProfilePage.tsx";
@@ -30,10 +38,9 @@ import SmpPage from "./pages/Public/layanan/LayananSMPPage.tsx";
 import SubSekretariatPage from "./pages/Public/layanan/LayananSubSekretariatPage.tsx";
 import AsetKeuanganPage from "./pages/Public/layanan/LayananAsetKeuanganPage.tsx";
 import BeritaPage from "./pages/Public/konten/BeritaPage.tsx";
-import PengaduanMasyarakat from "./pages/Public/layanan/PengaduanMasyarakat.tsx";
 
 // --- PAGES: ADMIN ---
-import AdminDashboard from "./pages/Admin/dashboard/AdminDashboard.tsx";
+import AdminDashboard from "./components/Layout/Admin/dashboard/AdminDashboard.tsx";
 import Berita from "./pages/Admin/Konten/berita/Berita.tsx";
 import DetailBerita from "./pages/Admin/Konten/berita/DetailBerita.tsx";
 
@@ -113,10 +120,6 @@ import IzinPenyelenggaraan from "./pages/Public/konten/layanan-informasi/paud-pn
 import Dapodik from "./pages/Public/konten/layanan-informasi/paud-pnf/Dapodik.tsx";
 
 // Styles
-import 'swiper/css';
-import 'swiper/css/autoplay';
-import 'swiper/css/effect-fade';
-import 'swiper/css/pagination';
 import "animate.css";
 
 function App() {
@@ -147,7 +150,6 @@ function App() {
       "Dokumentasi": "/dokumentasi",
       "Sejarah": "/sejarah",
       "Visi Misi": "/brand-identity",
-      "Pengaduan Masyarakat": "/pengaduan-masyarakat",
     };
 
     const route = routes[item];
@@ -158,149 +160,157 @@ function App() {
     }
   };
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      {/* ✅ Navbar: Tampil jika bukan Admin & bukan Login */}
-      {!isAdminRoute && !isLoginPage && (
-        <Navbar
-          activeDropdown={activeDropdown}
-          setActiveDropdown={setActiveDropdown}
-          dropdownMenus={{
-            profil: ["Sejarah", "Visi Misi", "Struktur Organisasi"],
-            layanan: {
-              "Layanan Akademik": ["PAUD Dan PNF", "SD", "SMP"],
-              "Birokrasi & SDM": [
-                "Ketenagaan GTK",
-                "Sub-Bagian Umum dan Kepegawaian",
-                "Perencanaan Dan Program",
-                "Sub-Sekretariat"
-              ],
-              "Fasilitas & Publik": [
-                "Aset dan Keuangan",
-                "Kebudayaan",
-                "Pengaduan Masyarakat"
-              ]
-            },
-            publikasi: ["Berita", "Kalender", "Dokumentasi"]
-          }}
-          onMenuClick={onMenuClick}
-        />
-      )}
+ return (
+  <Routes>
+    {/* ========================================= */}
+    {/* PUBLIC LAYOUT                */}
+    {/* ========================================= */}
+    <Route element={<PublicLayout />}>
+      
+      {/* --- Homepage --- */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/beranda" element={<HomePage />} />
 
-      {/* ✅ Main Content: Berisi Routing */}
-      <main className="flex-1">
-        <Routes>
-          {/* GUNAKAN HOMEPAGE YANG BARU */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/beranda" element={<HomePage />} />
-          
-          {/* Halaman Profil */}
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/brand-identity" element={<BrandIdentityPage />} />
-          <Route path="/sejarah" element={<SejarahPage />} />
-          <Route path="/kalender" element={<KalenderPage />} />
-          <Route path="/dokumentasi" element={<DokumentasiPage />} />
-          
-          {/* Halaman Layanan Utama */}
-          <Route path="/kepegawaian" element={<KepegawaianPage />} />
-          <Route path="/perencanaan" element={<PerencanaanPage />} />
-          <Route path="/ketenagaan" element={<KetenagaanPage />} />
-          <Route path="/kebudayaan" element={<KebudayaanPage />} />
-          <Route path="/paud" element={<PaudPage />} />
-          <Route path="/sd" element={<SdPage />} />
-          <Route path="/smp" element={<SmpPage />} />
-          <Route path="/sub-sekretariat" element={<SubSekretariatPage />} />
-          <Route path="/aset-dan-keuangan" element={<AsetKeuanganPage />} />
-          <Route path="/berita" element={<BeritaPage />} />
-          <Route path="/berita/:slug" element={<DetailBerita />} />
-          <Route path="/pengaduan-masyarakat" element={<PengaduanMasyarakat />} />
+      {/* --- Profil Instansi --- */}
+      <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/brand-identity" element={<BrandIdentityPage />} />
+      <Route path="/sejarah" element={<SejarahPage />} />
+      <Route path="/kalender" element={<KalenderPage />} />
+      <Route path="/dokumentasi" element={<DokumentasiPage />} />
 
-          {/* Route Rincian: SMP */}
-          <Route path="/smp/layanan/bos" element={<LayananBOS />} />
-          <Route path="/smp/layanan/data-sekolah" element={<LayananDataSekolah />} />
-          <Route path="/smp/layanan/legalisir" element={<LayananLegalisir />} />
-          <Route path="/smp/layanan/mutasi-siswa" element={<LayananMutasiSiswa />} />
-          <Route path="/smp/layanan/sapras" element={<LayananSapras />} />
-          <Route path="/smp/layanan/suket" element={<LayananSuket />} />
-          <Route path="/smp/layanan/suket-gantijazah" element={<LayananSuketGantijazah />} />
-          <Route path="/smp/layanan/ppdb" element={<LayananPPDBPage />} />
+      {/* --- Halaman Layanan Utama --- */}
+      <Route path="/kepegawaian" element={<KepegawaianPage />} />
+      <Route path="/perencanaan" element={<PerencanaanPage />} />
+      <Route path="/ketenagaan" element={<KetenagaanPage />} />
+      <Route path="/kebudayaan" element={<KebudayaanPage />} />
+      <Route path="/paud" element={<PaudPage />} />
+      <Route path="/sd" element={<SdPage />} />
+      <Route path="/smp" element={<SmpPage />} />
+      <Route path="/sub-sekretariat" element={<SubSekretariatPage />} />
+      <Route path="/aset-dan-keuangan" element={<AsetKeuanganPage />} />
+      
+      {/* --- Berita --- */}
+      <Route path="/berita" element={<BeritaPage />} />
+      <Route path="/berita/:slug" element={<DetailBerita />} />
 
-          {/* Route Rincian: PAUD */}
-          <Route path="/paud/layanan/bos-satuan-pendidikan" element={<DanaBosSapen/>} />
-          <Route path="/paud/layanan/ujian-kesetaraan-paket" element={<UjianKesetaraan/>} />
-          <Route path="/paud/layanan/dak" element={<LayananDanaDak />} />
-          <Route path="/paud/layanan/rekomendasi-lembaga-kursus" element={<RekomendasiLembagaKursus/>} />
-          <Route path="/paud/layanan/izin-penyelenggaraan" element={<IzinPenyelenggaraan/>} />
-          <Route path="/paud/layanan/legalisir-skhu" element={<LayananLegalisirSKHU />} />
-          <Route path="/paud/layanan/dapodik" element={<Dapodik />} />
-          <Route path="/paud/layanan/rekomendasi-pendirian-sekolah" element={<RekomendasiPendirianSekolah />} />
-          <Route path="/paud/layanan/bos-sekolah" element={<BosSekolah/>} />
+      {/* --- Rincian: SMP --- */}
+      <Route path="/smp/layanan/bos" element={<LayananBOS />} />
+      <Route path="/smp/layanan/data-sekolah" element={<LayananDataSekolah />} />
+      <Route path="/smp/layanan/legalisir" element={<LayananLegalisir />} />
+      <Route path="/smp/layanan/mutasi-siswa" element={<LayananMutasiSiswa />} />
+      <Route path="/smp/layanan/sapras" element={<LayananSapras />} />
+      <Route path="/smp/layanan/suket" element={<LayananSuket />} />
+      <Route path="/smp/layanan/suket-gantijazah" element={<LayananSuketGantijazah />} />
+      <Route path="/smp/layanan/ppdb" element={<LayananPPDBPage />} />
 
-          {/* Route Rincian: Ketenagaan & GTK */}
-          <Route path="/ketenagaan-gtk/layanan/nuptk" element={<LayananNUPTK />} />
-          <Route path="/ketenagaan-gtk/layanan/sertifikasi-pendidik" element={<LayananSertifikasiPendidik />} />
+      {/* --- Rincian: PAUD --- */}
+      <Route path="/paud/layanan/bos-satuan-pendidikan" element={<DanaBosSapen />} />
+      <Route path="/paud/layanan/ujian-kesetaraan-paket" element={<UjianKesetaraan />} />
+      <Route path="/paud/layanan/dak" element={<LayananDanaDak />} />
+      <Route path="/paud/layanan/rekomendasi-lembaga-kursus" element={<RekomendasiLembagaKursus />} />
+      <Route path="/paud/layanan/izin-penyelenggaraan" element={<IzinPenyelenggaraan />} />
+      <Route path="/paud/layanan/legalisir-skhu" element={<LayananLegalisirSKHU />} />
+      <Route path="/paud/layanan/dapodik" element={<Dapodik />} />
+      <Route path="/paud/layanan/rekomendasi-pendirian-sekolah" element={<RekomendasiPendirianSekolah />} />
+      <Route path="/paud/layanan/bos-sekolah" element={<BosSekolah />} />
 
-          {/* Route Rincian: Umum & Kepegawaian */}
-          <Route path="/umum-kepegawaian/layanan/cuti-umroh-haji-melahirkan" element={<LayananCutiUmrohHajiMelahirkan />} />
-          <Route path="/umum-kepegawaian/layanan/izin-belajar" element={<LayananIzinBelajar />} />
-          <Route path="/umum-kepegawaian/layanan/izin-cerai" element={<LayananIzinCerai />} />
-          <Route path="/umum-kepegawaian/layanan/bup" element={<LayananBup/>} />
-          <Route path="/umum-kepegawaian/layanan/kenaikan-pangkat" element={<LayananKenaikanPangkatUK />} />
-          <Route path="/umum-kepegawaian/layanan/mutasi-guru" element={<LayananMutasiGuru />} />
-          <Route path="/umum-kepegawaian/layanan/pensiun" element={<LayananPensiunUK />} />
-          <Route path="/umum-kepegawaian/layanan/rekomendasi-izin-penelitian" element={<LayananRekomendasiIzinPenelitian />} />
-          <Route path="/umum-kepegawaian/layanan/satya-lencana-karya-satya" element={<LayananSatyaLencanaKaryaSatya />} />
-          <Route path="/umum-kepegawaian/layanan/sk-gaji-berkala" element={<LayananSKGajiBerkala />} />
-          <Route path="/umum-kepegawaian/layanan/sk-jabatan-guru" element={<LayananSKJabatanGuru />} />
-          <Route path="/umum-kepegawaian/layanan/sk-jabatan-kenaikan-fungsional" element={<LayananSKJabatanKenaikanFungsional />} />
+      {/* --- Rincian: SD --- */}
+      <Route path="/sd/layanan/bos" element={<LayananBosSD />} />
+      <Route path="/sd/layanan/data-sekolah" element={<LayananDataSekolahSD />} />
+      <Route path="/sd/layanan/legalisir" element={<LayananLegalisirSD />} />
+      <Route path="/sd/layanan/mutasi-siswa" element={<LayananMutasiSiswaSD />} />
+      <Route path="/sd/layanan/ppdb" element={<LayananPpdbSD />} />
+      <Route path="/sd/layanan/sapras" element={<LayananSaprasSD />} />
+      <Route path="/sd/layanan/suket-gantijazah" element={<LayananSuketGantijazahSD />} />
+      <Route path="/sd/layanan/suket" element={<LayananSuketSD />} />
 
-          {/* Route Rincian: Kebudayaan */}
-          <Route path="/kebudayaan/layanan/informasi-kantor" element={<LayananInformasiKantor />} />
-          <Route path="/kebudayaan/layanan/izin-berkunjung" element={<LayananIzinBerkunjung />} />
-          <Route path="/kebudayaan/layanan/nomor-induk" element={<LayananNomorInduk />} />
-          <Route path="/kebudayaan/layanan/pendataan" element={<LayananPendataan />} />
-          <Route path="/kebudayaan/layanan/penemuan-objek" element={<LayananPenemuanObjek />} />
-          <Route path="/kebudayaan/layanan/pengembangan-situs" element={<LayananPengembanganSitus />} />
-          <Route path="/kebudayaan/layanan/penggunaan-halaman" element={<LayananPenggunaanHalaman />} />
-          <Route path="/kebudayaan/layanan/informasi-sosial" element={<LayananSosialMedia/>} />
+      {/* --- Rincian: Ketenagaan & GTK --- */}
+      <Route path="/ketenagaan-gtk/layanan/nuptk" element={<LayananNUPTK />} />
+      <Route path="/ketenagaan-gtk/layanan/sertifikasi-pendidik" element={<LayananSertifikasiPendidik />} />
 
-          {/* Route Rincian: Perencanaan & Program */}
-          <Route path="/perencanaan-program/layanan/approval-nuptk" element={<LayananApprovalNUPTK />} />
-          <Route path="/perencanaan-program/layanan/dapodik" element={<LayananDAPODIK />} />
-          <Route path="/perencanaan-program/layanan/nisn" element={<LayananNISN />} />
-          <Route path="/perencanaan-program/layanan/nomor-satuan-pendidikan" element={<LayananNomorSatuanPendidikan />} />
-          <Route path="/perencanaan-program/layanan/nomor-satuan-yayasan" element={<LayananNomorSatuanYayasan />} />
+      {/* --- Rincian: Umum & Kepegawaian --- */}
+      <Route path="/umum-kepegawaian/layanan/cuti-umroh-haji-melahirkan" element={<LayananCutiUmrohHajiMelahirkan />} />
+      <Route path="/umum-kepegawaian/layanan/izin-belajar" element={<LayananIzinBelajar />} />
+      <Route path="/umum-kepegawaian/layanan/izin-cerai" element={<LayananIzinCerai />} />
+      <Route path="/umum-kepegawaian/layanan/bup" element={<LayananBup />} />
+      <Route path="/umum-kepegawaian/layanan/kenaikan-pangkat" element={<LayananKenaikanPangkatUK />} />
+      <Route path="/umum-kepegawaian/layanan/mutasi-guru" element={<LayananMutasiGuru />} />
+      <Route path="/umum-kepegawaian/layanan/pensiun" element={<LayananPensiunUK />} />
+      <Route path="/umum-kepegawaian/layanan/rekomendasi-izin-penelitian" element={<LayananRekomendasiIzinPenelitian />} />
+      <Route path="/umum-kepegawaian/layanan/satya-lencana-karya-satya" element={<LayananSatyaLencanaKaryaSatya />} />
+      <Route path="/umum-kepegawaian/layanan/sk-gaji-berkala" element={<LayananSKGajiBerkala />} />
+      <Route path="/umum-kepegawaian/layanan/sk-jabatan-guru" element={<LayananSKJabatanGuru />} />
+      <Route path="/umum-kepegawaian/layanan/sk-jabatan-kenaikan-fungsional" element={<LayananSKJabatanKenaikanFungsional />} />
 
-          {/* Route Rincian: Sub-Sekretariat */}
-          <Route path="/sub-sekretariat/layanan/program-kerja" element={<LayananProgramKerja />} />
-          <Route path="/sub-sekretariat/layanan/tugas-fungsi" element={<LayananTugasFungsi />} />
+      {/* --- Rincian: Kebudayaan --- */}
+      <Route path="/kebudayaan/layanan/informasi-kantor" element={<LayananInformasiKantor />} />
+      <Route path="/kebudayaan/layanan/izin-berkunjung" element={<LayananIzinBerkunjung />} />
+      <Route path="/kebudayaan/layanan/nomor-induk" element={<LayananNomorInduk />} />
+      <Route path="/kebudayaan/layanan/pendataan" element={<LayananPendataan />} />
+      <Route path="/kebudayaan/layanan/penemuan-objek" element={<LayananPenemuanObjek />} />
+      <Route path="/kebudayaan/layanan/pengembangan-situs" element={<LayananPengembanganSitus />} />
+      <Route path="/kebudayaan/layanan/penggunaan-halaman" element={<LayananPenggunaanHalaman />} />
+      <Route path="/kebudayaan/layanan/informasi-sosial" element={<LayananSosialMedia />} />
 
-          {/* Route Rincian: Aset & Keuangan */}
-          <Route path="/aset-dan-keuangan/layanan/pengajuan-gaji" element={<LayananPengajuanGaji />} />
-          <Route path="/aset-dan-keuangan/layanan/perubahan-password-pajak" element={<LayananPerubahanPasswordPajak />} />
-          <Route path="/aset-dan-keuangan/layanan/verifikasi-dana-bop" element={<LayananVerifikasiDanaBOP />} />
-          
-          {/* Route Rincian: SD */}
-          <Route path="/sd/layanan/bos" element={<LayananBosSD />} />
-          <Route path="/sd/layanan/data-sekolah" element={<LayananDataSekolahSD />} />
-          <Route path="/sd/layanan/legalisir" element={<LayananLegalisirSD />} />
-          <Route path="/sd/layanan/mutasi-siswa" element={<LayananMutasiSiswaSD />} />
-          <Route path="/sd/layanan/ppdb" element={<LayananPpdbSD />} />
-          <Route path="/sd/layanan/sapras" element={<LayananSaprasSD />} />
-          <Route path="/sd/layanan/suket-gantijazah" element={<LayananSuketGantijazahSD />} />
-          <Route path="/sd/layanan/suket" element={<LayananSuketSD />} />
+      {/* --- Rincian: Perencanaan & Program --- */}
+      <Route path="/perencanaan-program/layanan/approval-nuptk" element={<LayananApprovalNUPTK />} />
+      <Route path="/perencanaan-program/layanan/dapodik" element={<LayananDAPODIK />} />
+      <Route path="/perencanaan-program/layanan/nisn" element={<LayananNISN />} />
+      <Route path="/perencanaan-program/layanan/nomor-satuan-pendidikan" element={<LayananNomorSatuanPendidikan />} />
+      <Route path="/perencanaan-program/layanan/nomor-satuan-yayasan" element={<LayananNomorSatuanYayasan />} />
 
-          {/* Auth & Admin */}
-          <Route path="/loginTW" element={<FormLoginTW />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/berita" element={<Berita />} />
-        </Routes>
-      </main>
+      {/* --- Rincian: Sub-Sekretariat --- */}
+      <Route path="/sub-sekretariat/layanan/program-kerja" element={<LayananProgramKerja />} />
+      <Route path="/sub-sekretariat/layanan/tugas-fungsi" element={<LayananTugasFungsi />} />
 
-      {/* ✅ Footer: Tampil jika bukan Admin & bukan Login */}
-      {!isAdminRoute && !isLoginPage && <Footer />}
-    </div>
-  );
+      {/* --- Rincian: Aset & Keuangan --- */}
+      <Route path="/aset-dan-keuangan/layanan/pengajuan-gaji" element={<LayananPengajuanGaji />} />
+      <Route path="/aset-dan-keuangan/layanan/perubahan-password-pajak" element={<LayananPerubahanPasswordPajak />} />
+      <Route path="/aset-dan-keuangan/layanan/verifikasi-dana-bop" element={<LayananVerifikasiDanaBOP />} />
+
+    </Route> {/* End PublicLayout */}
+
+
+    {/* ========================================= */}
+    {/* AUTH & ADMIN                  */}
+    {/* ========================================= */}
+    
+    {/* Halaman Login */}
+    <Route path="/portal-rhs-disdik-plw" element={<Login />} />
+
+    {/* Protected Admin Routes */}
+    <Route element={<StealthRoute />}>
+      <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      <Route path="/admin/berita" element={<Berita />} />
+      
+      {/* Profil Admin */}
+      <Route 
+        path="/admin/profil" 
+        element={
+          <div className="flex justify-center p-10">
+            <ProfilAvatar />
+          </div>
+        } 
+      />
+      {/* Ganti Password Admin */}
+      <Route 
+        path="/admin/password" 
+        element={
+          <div className="flex justify-center p-10">
+            <ChangePassword />
+          </div>
+        } 
+      />
+    </Route>
+
+
+    {/* ========================================= */}
+    {/* NOT FOUND                   */}
+    {/* ========================================= */}
+    <Route path="*" element={<NotFound />} />
+    
+  </Routes>
+);
 }
 
 export default App;

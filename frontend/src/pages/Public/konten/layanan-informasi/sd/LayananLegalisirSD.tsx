@@ -24,6 +24,10 @@ import {
   RefreshCw // Icon untuk indikator sync
 } from "lucide-react";
 
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 // --- TIPE DATA DARI BACKEND ---
 interface ContentData {
   layanan: string;
@@ -98,8 +102,8 @@ export default function LayananLegalisir() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Endpoint Tetap Legalisir
-        const response = await fetch("http://localhost:8000/api/sd/content/legalisir");
+        // ✅ GANTI DENGAN API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/sd/content/legalisir`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -138,10 +142,11 @@ export default function LayananLegalisir() {
   }, [initialLoading]);
 
   // --- VIEWER PROPS ---
+  // ✅ GANTI DENGAN API_BASE_URL
   const viewerProps = {
     judul: "Dokumen & Formulir Legalisir",
     deskripsi: "Contoh format ijazah dan formulir permohonan legalisir.",
-    endpoint: "http://localhost:8000/api/sd/upload/legalisir",
+    endpoint: `${API_BASE_URL}/public/sd/upload/legalisir`,
   };
 
   // --- HELPER FUNCTIONS ---
@@ -358,12 +363,12 @@ export default function LayananLegalisir() {
                                 <LayananViewer
                                     judul="" 
                                     deskripsi=""
-                                    endpoint={viewerProps.endpoint}
+                                    endpoint={viewerProps.endpoint} 
                                 />
                             </div>
                         </div>
 
-                        {/* BAGIAN BAWAH: PERSYARATAN & ALUR (LOGIC WRAPPER) */}
+                        {/* BAGIAN BAWAH: LOGIC WRAPPER (Hanya Tampil Jika Salah Satu Aktif) */}
                         {(data.isPersyaratanActive || data.isAlurActive) && (
                           <motion.div 
                             layout 
@@ -376,7 +381,7 @@ export default function LayananLegalisir() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 
-                                {/* 2. PERSYARATAN BERKAS */}
+                                {/* 2. PERSYARATAN BERKAS (Dynamic & Toggleable) */}
                                 {data.isPersyaratanActive && (
                                   <div className="space-y-5">
                                       <div className="flex items-center gap-2 mb-2">
@@ -402,7 +407,7 @@ export default function LayananLegalisir() {
                                   </div>
                                 )}
 
-                                {/* 3. ALUR SINGKAT */}
+                                {/* 3. ALUR SINGKAT (Dynamic, Toggleable & Colored) */}
                                 {data.isAlurActive && (
                                   <div className="space-y-5">
                                       <div className="flex items-center gap-2 mb-2">
@@ -417,7 +422,7 @@ export default function LayananLegalisir() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -429,11 +434,9 @@ export default function LayananLegalisir() {
                                       </div>
                                   </div>
                                 )}
-
                             </div>
                           </motion.div>
                         )}
-
                       </motion.div>
                     )}
 
@@ -453,16 +456,15 @@ export default function LayananLegalisir() {
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold text-slate-800">Jadwal Pelayanan</h3>
-                                <p className="text-sm text-slate-400">Waktu penerimaan dan pengambilan berkas legalisir.</p>
+                                <p className="text-sm text-slate-400">Informasi hari dan jam buka layanan legalisir.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
-                                    
                                     {/* Hari */}
                                     <div className="flex items-center gap-4 mb-3 md:mb-0">
                                         <div className={`p-3 rounded-xl ${item.status === 'off' ? 'bg-rose-100 text-rose-600' : 'bg-blue-50 text-blue-600'}`}>
@@ -475,7 +477,6 @@ export default function LayananLegalisir() {
                                             </div>
                                         </div>
                                     </div>
-
                                     {/* Jam */}
                                     <div className="flex flex-col md:items-end gap-1 pl-14 md:pl-0">
                                         {item.status !== 'off' ? (
@@ -502,28 +503,28 @@ export default function LayananLegalisir() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
-                        {/* Catatan Tambahan */}
-                        <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-200 flex gap-4 items-start">
-                            <AlertCircle className="text-slate-400 shrink-0 mt-0.5" size={20} />
-                            <div className="text-sm text-slate-600 leading-relaxed">
-                                <span className="font-bold text-slate-800">Catatan:</span> Pelayanan tutup pada hari <strong>Libur Nasional</strong> dan <strong>Cuti Bersama</strong>.
-                            </div>
-                        </div>
+                          {/* Catatan Tambahan */}
+                          <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-200 flex gap-4 items-start">
+                              <AlertCircle className="text-slate-400 shrink-0 mt-0.5" size={20} />
+                              <div className="text-sm text-slate-600 leading-relaxed">
+                                  <span className="font-bold text-slate-800">Catatan:</span> Pelayanan tutup pada hari <strong>Libur Nasional</strong> dan <strong>Cuti Bersama</strong>.
+                              </div>
+                          </div>
 
-                         {/* Link Peta */}
-                         {data.mapLink && (
-                           <a 
-                             href={data.mapLink}
-                             target="_blank"
-                             rel="noreferrer"
-                             className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:underline mt-2"
-                           >
-                              <MapPin size={16} />
-                              Lihat Lokasi Penyerahan Berkas
-                           </a>
-                         )}
+                           {/* Link Peta */}
+                           {data.mapLink && (
+                             <a 
+                               href={data.mapLink}
+                               target="_blank"
+                               rel="noreferrer"
+                               className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:underline mt-2"
+                             >
+                                <MapPin size={16} />
+                                Lihat Lokasi Kantor di Google Maps
+                             </a>
+                           )}
 
                       </motion.div>
                     )}
@@ -542,13 +543,12 @@ export default function LayananLegalisir() {
                transition={{ duration: 0.8, delay: 0.5 }}
                className="lg:w-1/3 flex flex-col gap-6 order-1 lg:order-2 lg:sticky lg:top-8 h-fit z-30 relative"
             >
-              
               {/* === OVERLAY UPDATE ANIMATION (Sidebar) === */}
               <AnimatePresence>
                 {isUpdating && <UpdatingOverlay />}
               </AnimatePresence>
               
-              {/* 2. CTA BUTTON (DINAMIS) */}
+              {/* 2. CTA BUTTON (DINAMIS - ANIMATED TOGGLE) */}
               <AnimatePresence mode="popLayout">
                 {data.portalVisible && (
                     <motion.div
@@ -574,7 +574,7 @@ export default function LayananLegalisir() {
                 )}
               </AnimatePresence>
 
-              {/* 3. DOWNLOAD AREA (Layout Prop) */}
+              {/* 3. DOWNLOAD AREA */}
               <motion.div 
                 layout 
                 transition={{ duration: 0.4, ease: "easeInOut" }}
@@ -593,7 +593,7 @@ export default function LayananLegalisir() {
                     data.downloads.map((file, index) => (
                       <a key={index} href={file.url} target="_blank" rel="noreferrer" className="flex items-center justify-between p-4 bg-slate-50 hover:bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group cursor-pointer">
                         <div className="flex items-center gap-4 overflow-hidden">
-                          <div className="w-10 h-10 bg-white text-rose-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
+                          <div className="w-10 h-10 bg-white text-emerald-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
                             <FileText size={20} />
                           </div>
                           <span className="text-sm font-medium text-slate-700 truncate group-hover:text-indigo-700 transition">
@@ -606,14 +606,14 @@ export default function LayananLegalisir() {
                   ) : (
                       <div className="py-6 text-center px-4">
                         <p className="text-sm text-slate-500 italic font-medium">
-                            Tidak ada berkas formulir.
+                            Belum ada dokumen yang tersedia untuk diunduh saat ini.
                         </p>
                       </div>
                   )}
                 </div>
               </motion.div>
 
-              {/* 4. CONTACT CARD (Layout Prop) */}
+              {/* 4. CONTACT CARD */}
               <motion.div 
                 layout 
                 transition={{ duration: 0.4, ease: "easeInOut" }}

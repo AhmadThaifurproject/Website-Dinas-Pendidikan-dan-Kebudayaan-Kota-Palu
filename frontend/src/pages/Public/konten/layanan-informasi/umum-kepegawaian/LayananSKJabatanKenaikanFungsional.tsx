@@ -22,6 +22,7 @@ import {
   MessageCircle,
   Mail,
   HelpCircle,
+  CalendarClock,
   // --- IKON KHUSUS KENAIKAN JABATAN ---
   TrendingUp,       // Ikon Utama (Kenaikan Jenjang)
   Briefcase,        // Ikon Jabatan
@@ -31,6 +32,10 @@ import {
   ClipboardCheck,   // Ikon Uji Kompetensi
   CalendarRange     // Ikon Periode Penilaian
 } from "lucide-react";
+
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 // --- TIPE DATA (Sesuai Struktur Admin) ---
 interface ContentData {
@@ -123,7 +128,8 @@ export default function LayananSKJabatanKenaikanFungsional() {
     const fetchData = async () => {
       try {
         // ENDPOINT: SK Kenaikan Jabatan Fungsional
-        const response = await fetch("http://localhost:8000/api/kepegawaian/content/sk-jabatan-kenaikan-fungsional");
+        // ✅ PERUBAHAN: Endpoint dinamis menggunakan API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/kepegawaian/content/sk-jabatan-kenaikan-fungsional`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -152,8 +158,9 @@ export default function LayananSKJabatanKenaikanFungsional() {
   }, [initialLoading]); 
 
   // --- VIEWER PROPS ---
+  // ✅ PERUBAHAN: Endpoint dinamis
   const viewerProps = {
-    endpoint: "http://localhost:8000/api/kepegawaian/upload/sk-jabatan-kenaikan-fungsional", 
+    endpoint: `${API_BASE_URL}/public/kepegawaian/upload/sk-jabatan-kenaikan-fungsional`, 
   };
 
   // --- HELPER: COLOR MAPPING (Indigo Theme) ---
@@ -239,7 +246,7 @@ export default function LayananSKJabatanKenaikanFungsional() {
     contactSectionIcon: "Phone"
   };
 
-  // Resolve Icons
+  // Resolve Dynamic Icons
   const TabIconComponent = getIconComponent(data.tabIcon, TrendingUp);
   const ContactIconComponent = getIconComponent(data.contactSectionIcon, Phone);
 
@@ -347,8 +354,8 @@ export default function LayananSKJabatanKenaikanFungsional() {
                       activeTab === "schedule" ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"
                     }`}
                   >
-                    <CalendarRange size={20} />
-                    Jadwal Uji Kom
+                    <CalendarClock size={20} />
+                    Jadwal Periode
                     {activeTab === "schedule" && (
                       <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600 rounded-t-full" />
                     )}
@@ -377,7 +384,7 @@ export default function LayananSKJabatanKenaikanFungsional() {
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-bold text-slate-800">
-                                        {data.previewSectionTitle || "Pratinjau Regulasi"}
+                                        {data.previewSectionTitle || "Pratinjau Dokumen"}
                                     </h3>
                                     {data.previewSectionDesc && (
                                         <p className="text-sm text-slate-500">{data.previewSectionDesc}</p>
@@ -406,13 +413,13 @@ export default function LayananSKJabatanKenaikanFungsional() {
                             <div className="border-t border-slate-100"></div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                {/* SYARAT (Context: Kelengkapan DUPAK & Uji Kom) */}
+                                {/* SYARAT */}
                                 {data.isPersyaratanActive && (
                                   <div className="space-y-5">
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                               <CheckCircle className="text-indigo-500" size={20}/>
-                                              Syarat Pengajuan
+                                              Persyaratan Berkas
                                           </h3>
                                       </div>
                                       <ul className="space-y-3">
@@ -432,13 +439,13 @@ export default function LayananSKJabatanKenaikanFungsional() {
                                   </div>
                                 )}
 
-                                {/* ALUR (Context: Proses Penilaian & Penerbitan) */}
+                                {/* ALUR */}
                                 {data.isAlurActive && (
                                   <div className="space-y-5">
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                                              <TrendingUp className="text-indigo-500" size={20}/>
-                                              Mekanisme Kenaikan
+                                              <Briefcase className="text-indigo-500" size={20}/>
+                                              Alur Pengajuan
                                           </h3>
                                       </div>
                                       <div className="relative pl-6 border-l-2 border-slate-100 space-y-6">
@@ -464,7 +471,7 @@ export default function LayananSKJabatanKenaikanFungsional() {
                       </motion.div>
                     )}
 
-                    {/* === TAB 2: JADWAL PERIODE === */}
+                    {/* === TAB 2: JAM LAYANAN === */}
                     {activeTab === "schedule" && (
                         <motion.div
                         key="schedule"
@@ -479,15 +486,17 @@ export default function LayananSKJabatanKenaikanFungsional() {
                                 <Clock size={24} />
                             </div>
                             <div>
-                                <h3 className="text-xl font-bold text-slate-800">Jadwal Periode Penilaian</h3>
-                                <p className="text-sm text-slate-400">Jadwal sidang penetapan angka kredit dan penerbitan SK.</p>
+                                <h3 className="text-xl font-bold text-slate-800">Waktu Pelayanan</h3>
+                                <p className="text-sm text-slate-400">Jadwal layanan konsultasi.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-indigo-100'}`}>
+                                    {/* Hari */}
                                     <div className="flex items-center gap-4 mb-3 md:mb-0">
                                         <div className={`p-3 rounded-xl ${item.status === 'off' ? 'bg-rose-100 text-rose-600' : 'bg-indigo-50 text-indigo-600'}`}>
                                             <Calendar size={24} />
@@ -499,6 +508,7 @@ export default function LayananSKJabatanKenaikanFungsional() {
                                             </div>
                                         </div>
                                     </div>
+                                    {/* Jam */}
                                     <div className="flex flex-col md:items-end gap-1 pl-14 md:pl-0">
                                         {item.status !== 'off' ? (
                                             <>
@@ -509,13 +519,13 @@ export default function LayananSKJabatanKenaikanFungsional() {
                                                 {item.breakTime && item.breakTime !== '-' && (
                                                     <div className="text-sm text-slate-400 flex items-center gap-2">
                                                         <span className="w-1.5 h-1.5 bg-orange-400 rounded-full"></span>
-                                                        Ket: {item.breakTime}
+                                                        Istirahat: {item.breakTime}
                                                     </div>
                                                 )}
                                             </>
                                         ) : (
                                             <div className="text-rose-500 font-medium text-sm italic flex items-center gap-2">
-                                                Tutup
+                                                Tidak ada pelayanan
                                             </div>
                                         )}
                                     </div>
@@ -524,11 +534,12 @@ export default function LayananSKJabatanKenaikanFungsional() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
+                          {/* Link Peta */}
                           {data.mapLink && (
                            <a href={data.mapLink} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-indigo-600 font-medium cursor-pointer hover:underline mt-2">
-                              <MapPin size={16} /> Lihat Lokasi Kantor Dinas
+                              <MapPin size={16} /> Lihat Lokasi Kantor di Google Maps
                            </a>
                           )}
                       </motion.div>
@@ -536,6 +547,7 @@ export default function LayananSKJabatanKenaikanFungsional() {
                   </AnimatePresence>
                 </div>
               </motion.div>
+
             </motion.div>
 
             {/* === KOLOM KANAN (Sidebar) === */}
@@ -546,11 +558,12 @@ export default function LayananSKJabatanKenaikanFungsional() {
                transition={{ duration: 0.8, delay: 0.5 }}
                className="lg:w-1/3 flex flex-col gap-6 order-1 lg:order-2 lg:sticky lg:top-8 h-fit z-30 relative"
             >
+              {/* === OVERLAY UPDATE ANIMATION === */}
               <AnimatePresence>
                 {isUpdating && <UpdatingOverlay />}
               </AnimatePresence>
 
-              {/* 1. BUTTON PORTAL SIASN/DISPAK */}
+              {/* 1. BUTTON PORTAL E-MUTASI / SIASN (Updated Gradient) */}
               <AnimatePresence mode="popLayout">
                 {data.portalVisible && (
                     <motion.div
@@ -569,14 +582,14 @@ export default function LayananSKJabatanKenaikanFungsional() {
                       >
                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                         <Globe className="relative z-10" size={20}/>
-                        <span className="relative z-10">{data.portalLabel || "Akses SIASN / DISPAK"}</span>
+                        <span className="relative z-10">{data.portalLabel || "Akses SIASN"}</span>
                         <ArrowRight className="group-hover:translate-x-1 transition-transform relative z-10" size={20} />
                       </a>
                     </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* 2. DOWNLOAD AREA (DUPAK/Format) */}
+              {/* 2. DOWNLOAD AREA (Updated Colors) */}
               <motion.div 
                 layout 
                 transition={{ duration: 0.4, ease: "easeInOut" }}
@@ -615,20 +628,19 @@ export default function LayananSKJabatanKenaikanFungsional() {
                   ) : (
                       <div className="py-6 text-center px-4">
                         <p className="text-sm text-slate-500 italic font-medium">
-                            Belum ada template dokumen yang tersedia.
+                            Belum ada dokumen yang tersedia.
                         </p>
                       </div>
                   )}
                 </div>
               </motion.div>
 
-              {/* 3. CONTACT CARD (Subbidang PTK) */}
+              {/* 3. CONTACT CARD (Updated to Dark Blue Theme) */}
               <motion.div 
                 layout 
                 transition={{ duration: 0.4, ease: "easeInOut" }}
                 className="bg-[#0f172a] text-white rounded-3xl shadow-xl p-8 relative overflow-hidden group"
               >
-                {/* Background effects */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl translate-x-10 -translate-y-10 group-hover:bg-indigo-500/30 transition-colors"></div>
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/20 rounded-full blur-3xl -translate-x-10 translate-y-10"></div>
                 
@@ -637,13 +649,11 @@ export default function LayananSKJabatanKenaikanFungsional() {
                         <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
                             <ContactIconComponent className="text-yellow-400" size={20} />
                         </div>
-                        {data.contactSectionTitle || "Subbidang PTK"}
+                        {data.contactSectionTitle || "Kontak Layanan"}
                     </h3>
-                    {data.contactSectionDesc && (
-                      <p className="text-sm text-slate-400 leading-relaxed">
-                          {data.contactSectionDesc}
-                      </p>
-                    )}
+                    <p className="text-sm text-slate-400 leading-relaxed">
+                        {data.contactSectionDesc}
+                    </p>
                 </div>
 
                 <div className="relative z-10 space-y-3">
@@ -655,7 +665,7 @@ export default function LayananSKJabatanKenaikanFungsional() {
                             </div>
                             <div>
                             <p className="text-[10px] text-yellow-200 uppercase font-bold tracking-wider mb-0.5">
-                                {contact.name || "Verifikator"}
+                                {contact.name || "Petugas"}
                             </p>
                             <p className="font-bold text-lg tracking-wide">
                                 {contact.number}

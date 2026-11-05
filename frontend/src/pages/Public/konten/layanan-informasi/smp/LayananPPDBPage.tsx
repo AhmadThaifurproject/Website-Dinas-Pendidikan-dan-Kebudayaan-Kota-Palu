@@ -1,3 +1,4 @@
+// src/pages/Public/LayananPPDB/LayananPPDBPage.tsx
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,6 +22,10 @@ import {
   RefreshCw,
   UserPlus // Icon relevan untuk PPDB (Siswa Baru)
 } from "lucide-react";
+
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 // --- TIPE DATA DARI BACKEND (Sesuai Referensi) ---
 interface ContentData {
@@ -101,8 +106,8 @@ export default function LayananPPDBPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // PERUBAHAN: Endpoint diarahkan ke 'ppdb'
-        const response = await fetch("http://localhost:8000/api/smp/content/ppdb");
+        // ✅ PERUBAHAN: Endpoint dinamis menggunakan API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/smp/content/ppdb`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -141,11 +146,12 @@ export default function LayananPPDBPage() {
   }, [initialLoading]); 
 
   // --- VIEWER PROPS ---
-  // Endpoint Upload khusus PPDB
+  // Endpoint Upload khusus PPDB (Dinamis)
   const viewerProps = {
     judul: "Informasi & Panduan PPDB",
     deskripsi: "Dokumen resmi, juknis, dan pengumuman terkait PPDB.",
-    endpoint: "http://localhost:8000/api/smp/upload/ppdb", 
+    // ✅ PERUBAHAN: Endpoint dinamis
+    endpoint: `${API_BASE_URL}/public/smp/upload/ppdb`, 
   };
 
   // --- HELPER FUNCTIONS ---
@@ -420,7 +426,7 @@ export default function LayananPPDBPage() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -456,10 +462,10 @@ export default function LayananPPDBPage() {
                                 <h3 className="text-xl font-bold text-slate-800">Jadwal Pelayanan & Seleksi</h3>
                                 <p className="text-sm text-slate-400">Jadwal verifikasi berkas dan pelayanan panitia PPDB.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
@@ -501,7 +507,7 @@ export default function LayananPPDBPage() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
                           {/* Link Peta */}
                           {data.mapLink && (
@@ -642,7 +648,7 @@ export default function LayananPPDBPage() {
                       ))
                   ) : (
                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
-                        Belum ada kontak tersedia.
+                       Belum ada kontak tersedia.
                      </div>
                   )}
                 </div>

@@ -27,6 +27,10 @@ import {
   Mail
 } from "lucide-react";
 
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 // --- 1. TYPE DEFINITIONS (SINKRON DENGAN PAYLOAD ADMIN) ---
 interface ContentData {
   layanan: string;
@@ -91,7 +95,7 @@ const UpdatingOverlay = () => (
       <motion.div 
         animate={{ rotate: 360 }}
         transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-        className="w-16 h-16 rounded-full border-4 border-t-indigo-500 border-r-purple-500 border-b-blue-500 border-l-transparent"
+        className="w-16 h-16 rounded-full border-4 border-t-blue-500 border-r-purple-500 border-b-pink-500 border-l-transparent"
       />
       <div className="absolute inset-0 flex items-center justify-center text-indigo-600">
         <RefreshCw size={24} className="animate-spin-slow" />
@@ -100,7 +104,7 @@ const UpdatingOverlay = () => (
     <motion.p 
       initial={{ y: 10, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="mt-4 font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 text-sm tracking-wider uppercase"
+      className="mt-4 font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 text-sm tracking-wider uppercase"
     >
       Menyinkronkan Data...
     </motion.p>
@@ -112,14 +116,17 @@ export default function LayananProgramKerja() {
   
   // State Data
   const [content, setContent] = useState<ContentData | null>(null);
+  
+  // State Loading Awal (Full Screen)
   const [initialLoading, setInitialLoading] = useState(true);
+  
+  // State Updating (Overlay saat polling)
   const [isUpdating, setIsUpdating] = useState(false);
   const prevContentRef = useRef<string>("");
 
-  // --- 2. CONFIG FETCHING ---
-  // Pastikan URL ini sesuai dengan categorySlug ('sub_sekretariat') dan layanan ('program-kerja')
-  const API_URL = "http://localhost:8000/api/sub_sekretariat/content/program-kerja";
-  const FILE_API_URL = "http://localhost:8000/api/sub_sekretariat/upload/program-kerja";
+  // --- 2. CONFIG FETCHING (Mekanisme URL & Polling dari Referensi) ---
+  const API_URL = `${API_BASE_URL}/public/sub-sekretariat/content/program-kerja`;
+  const FILE_API_URL = `${API_BASE_URL}/public/sub-sekretariat/upload/program-kerja`;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -134,7 +141,7 @@ export default function LayananProgramKerja() {
           if (prevContentRef.current !== stringifiedData) {
             if (!initialLoading) {
               setIsUpdating(true);
-              await new Promise(r => setTimeout(r, 800)); // Delay kosmetik agar user sadar ada update
+              await new Promise(r => setTimeout(r, 800)); // Delay kosmetik
             }
             setContent(rawData);
             prevContentRef.current = stringifiedData; 
@@ -151,42 +158,39 @@ export default function LayananProgramKerja() {
     fetchData(); 
     const intervalId = setInterval(fetchData, 3000); // Polling setiap 3 detik
     return () => clearInterval(intervalId);
-  }, [initialLoading]); 
+  }, [initialLoading, API_URL]); 
 
-  // --- 3. HELPER FUNCTIONS (MAPPING DARI ADMIN) ---
+  // --- 3. HELPER FUNCTIONS ---
 
-  // A. Mapping Warna Siklus (Dari string 'blue', 'emerald' ke Class Tailwind)
   const getStepColor = (color: string | undefined) => {
     switch(color) {
-      case 'blue': return 'bg-blue-100 text-blue-600 border-blue-200 ring-blue-500';
-      case 'emerald': return 'bg-emerald-100 text-emerald-600 border-emerald-200 ring-emerald-500';
-      case 'purple': return 'bg-purple-100 text-purple-600 border-purple-200 ring-purple-500';
-      case 'amber': return 'bg-amber-100 text-amber-600 border-amber-200 ring-amber-500';
-      case 'rose': return 'bg-rose-100 text-rose-600 border-rose-200 ring-rose-500';
-      case 'indigo': return 'bg-indigo-100 text-indigo-600 border-indigo-200 ring-indigo-500';
-      default: return 'bg-blue-100 text-blue-600 border-blue-200 ring-blue-500';
+      case 'blue': return 'bg-blue-100 text-blue-600 border-blue-200';
+      case 'emerald': return 'bg-emerald-100 text-emerald-600 border-emerald-200';
+      case 'purple': return 'bg-purple-100 text-purple-600 border-purple-200';
+      case 'amber': return 'bg-amber-100 text-amber-600 border-amber-200';
+      case 'rose': return 'bg-rose-100 text-rose-600 border-rose-200';
+      default: return 'bg-blue-100 text-blue-600 border-blue-200';
     }
   };
 
-  // B. Mapping Status Agenda
   const getStatusBadge = (status: string | undefined) => {
     switch(status) {
-        case 'work': return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-600 border border-emerald-200">Aktif / Terjadwal</span>;
-        case 'off': return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-600 border border-rose-200">Selesai / Libur</span>;
+        case 'work': return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-600 border border-emerald-200">Terjadwal</span>;
+        case 'off': return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-600 border border-rose-200">Selesai</span>;
         case 'special': return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-600 border border-amber-200">Prioritas</span>;
         default: return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500">Draft</span>;
     }
   };
 
-  // C. Mapping Icon (String dari Admin -> Lucide Component)
   const getIconComponent = (iconName: string | undefined, defaultIcon: any) => {
     switch (iconName) {
         case "FileText": return FileText;
-        case "ClipboardList": return Briefcase;
+        case "ClipboardList": return ClipboardList;
         case "Users": return User;
         case "Target": return Award;
         case "Settings": return Settings;
         case "Database": return Database;
+        case "Layout": return Layout;
         case "Phone": return Phone;
         case "MessageCircle": return MessageCircle;
         case "Mail": return Mail;
@@ -201,7 +205,7 @@ export default function LayananProgramKerja() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
             <div className="relative">
-                <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
                 <div className="absolute inset-0 flex items-center justify-center text-indigo-600 font-bold text-xs">DATA</div>
             </div>
             <p className="text-slate-500 font-medium animate-pulse">Memuat program kerja...</p>
@@ -210,7 +214,7 @@ export default function LayananProgramKerja() {
     );
   }
 
-  // --- 5. DATA FALLBACK & PREPARATION ---
+  // --- 5. DATA FALLBACK ---
   const data: ContentData = content || {
     layanan: "program-kerja", 
     isIndikatorActive: false,
@@ -221,7 +225,7 @@ export default function LayananProgramKerja() {
     agendaKegiatan: [],
     mapLink: "#",
     previewSectionTitle: "Dokumen Perencanaan",
-    previewSectionDesc: "Pratinjau dokumen.",
+    previewSectionDesc: "Pratinjau dokumen program kerja.",
     tabTitle: "Dokumen Program", 
     tabIcon: "FileText",
     portalVisible: false,
@@ -235,20 +239,27 @@ export default function LayananProgramKerja() {
     contacts: []
   };
 
-  // Resolve Dynamic Icons
-  const TabIconProgram = getIconComponent(data.tabIcon, FileText);
-  const ContactIcon = getIconComponent(data.contactSectionIcon, Phone);
+  const TabIconComponent = getIconComponent(data.tabIcon, ClipboardList);
+  const ContactIconComponent = getIconComponent(data.contactSectionIcon, Phone);
+
+  const viewerProps = {
+    judul: data.previewSectionTitle || "Dokumen Program Kerja",
+    deskripsi: data.previewSectionDesc || "Pratinjau dokumen perencanaan.",
+    endpoint: FILE_API_URL, 
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-500 selection:text-white">
       
-      {/* ================= HERO SECTION (STATIC / THEMED) ================= */}
+      {/* ================= HERO SECTION (VISUAL WARNA SINKRON DENGAN REF) ================= */}
       <div className="relative z-20 mb-12">
         <div className="bg-[#0f172a] pt-40 pb-48 px-6 rounded-b-[3rem] shadow-2xl relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-slate-900 to-[#1e293b]"></div>
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-teal-600/20 blur-[120px] rounded-full mix-blend-screen opacity-50"></div>
+          {/* Gradient Warna Biru/Ungu seperti Referensi BOS */}
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen opacity-50"></div>
           <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-600/10 blur-[100px] rounded-full mix-blend-screen opacity-40"></div>
-          
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
+
           <div className="relative container mx-auto max-w-5xl text-center z-10">
             <motion.div 
               initial={{ opacity: 0, y: -20 }}
@@ -258,7 +269,9 @@ export default function LayananProgramKerja() {
             >
               <Link to="/" className="hover:text-white transition-colors duration-300">Beranda</Link>
               <span className="text-slate-500">•</span>
-              <Link to="/sub-sekretariat" className="text-blue-400 hover:text-white transition-colors duration-300">Sub-Sekretariat</Link>
+              <Link to="/sub-sekretariat" className="text-blue-400 hover:text-white transition-colors duration-300">
+                Sub-Sekretariat
+              </Link>
             </motion.div>
 
             <motion.h1 
@@ -268,8 +281,8 @@ export default function LayananProgramKerja() {
               className="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-6 leading-tight drop-shadow-2xl"
             >
               Layanan <br className="hidden md:block"/> 
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 via-indigo-400 to-purple-400 animate-gradient-x">
-                Program Kerja
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 animate-gradient-x">
+                Program Kerja & Anggaran
               </span>
             </motion.h1>
 
@@ -281,11 +294,12 @@ export default function LayananProgramKerja() {
             >
               Transparansi rencana strategis, anggaran, dan monitoring capaian kinerja instansi.
             </motion.p>
+            
              <motion.div 
                initial={{ width: 0 }}
                animate={{ width: "6rem" }}
                transition={{ duration: 1, delay: 0.5 }}
-               className="h-1 bg-gradient-to-r from-teal-500 to-indigo-500 mx-auto rounded-full"
+               className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500 mx-auto rounded-full"
              ></motion.div>
           </div>
         </div>
@@ -312,35 +326,34 @@ export default function LayananProgramKerja() {
                 transition={{ duration: 0.4, type: "spring", stiffness: 100, damping: 15 }}
                 className="bg-white rounded-3xl shadow-2xl border border-slate-100 relative overflow-hidden flex flex-col h-fit"
               >
-                {/* Header Gradient Stripe */}
-                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-400 via-indigo-500 to-purple-500 z-10"></div>
+                {/* Header Line (Sesuai Referensi) */}
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500 z-10"></div>
 
                 {/* --- NAVIGATION TABS --- */}
                 <div className="flex border-b border-slate-100 bg-slate-50/50 pt-4 px-4 md:px-8 gap-6 overflow-x-auto scrollbar-hide z-0">
                   <button 
                     onClick={() => setActiveTab("program")}
                     className={`pb-4 px-2 font-bold text-sm md:text-base flex items-center gap-2 transition-all relative ${
-                      activeTab === "program" ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"
+                      activeTab === "program" ? "text-blue-600" : "text-slate-400 hover:text-slate-600"
                     }`}
                   >
-                    <TabIconProgram size={20} />
-                    {/* Menggunakan Judul Tab dari Admin */}
-                    {data.tabTitle || "Dokumen Program"}
+                    <TabIconComponent size={20} />
+                    {data.tabTitle}
                     {activeTab === "program" && (
-                      <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600 rounded-t-full" />
+                      <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-t-full" />
                     )}
                   </button>
 
                   <button 
                     onClick={() => setActiveTab("agenda")}
                     className={`pb-4 px-2 font-bold text-sm md:text-base flex items-center gap-2 transition-all relative ${
-                      activeTab === "agenda" ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"
+                      activeTab === "agenda" ? "text-blue-600" : "text-slate-400 hover:text-slate-600"
                     }`}
                   >
                     <CalendarRange size={20} />
                     Jadwal & Agenda
                     {activeTab === "agenda" && (
-                      <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600 rounded-t-full" />
+                      <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-t-full" />
                     )}
                   </button>
                 </div>
@@ -349,7 +362,7 @@ export default function LayananProgramKerja() {
                 <div className="p-6 md:p-8 flex-1 bg-white relative">
                   <AnimatePresence mode="wait">
                     
-                    {/* === TAB 1: DOKUMEN & INDIKATOR === */}
+                    {/* TAB 1: PROGRAM KERJA */}
                     {activeTab === "program" && (
                       <motion.div
                         key="program"
@@ -359,70 +372,57 @@ export default function LayananProgramKerja() {
                         transition={{ duration: 0.3 }}
                         className="space-y-10"
                       >
-                        {/* 1. FILE PREVIEW UTAMA */}
+                        {/* 1. FILE PREVIEW */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                                {/* Warna Icon (Purple/Indigo) */}
+                                <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
                                     <BarChart2 size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-slate-800">{data.previewSectionTitle || "Dokumen Perencanaan"}</h3>
-                                    {data.previewSectionDesc && (
-                                        <p className="text-sm text-slate-500">{data.previewSectionDesc}</p>
-                                    )}
+                                    <h3 className="text-xl font-bold text-slate-800">{viewerProps.judul}</h3>
+                                    <p className="text-sm text-slate-500">{viewerProps.deskripsi}</p>
                                 </div>
                             </div>
-
-                            {/* CONTAINER PREVIEWER */}
                             <div className="w-full h-[500px] bg-slate-50 rounded-2xl border border-slate-200 shadow-inner relative isolate overflow-hidden overscroll-contain transform-gpu z-0">
-                                {/* Menggunakan Endpoint yang sama dengan Admin untuk Upload */}
                                 <LayananViewer
                                     judul="" 
                                     deskripsi=""
-                                    endpoint={FILE_API_URL} 
+                                    endpoint={viewerProps.endpoint} 
                                 />
                             </div>
                         </div>
 
-                        {/* BAGIAN BAWAH (DINAMIS BERDASARKAN TOGGLE ADMIN) */}
                         {(data.isIndikatorActive || data.isSiklusActive) && (
-                          <motion.div 
-                            layout 
-                            initial={{ opacity: 0 }} 
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="space-y-10"
-                          >
+                          <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
                             <div className="border-t border-slate-100"></div>
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                
-                                {/* 2. INDIKATOR KINERJA */}
+                                {/* Indikator Kinerja */}
                                 {data.isIndikatorActive && (
                                   <div className="space-y-5">
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                                              <Target className="text-indigo-500" size={20}/>
-                                              Indikator Kinerja (IKU)
+                                              <Target className="text-blue-500" size={20}/>
+                                              Indikator Kinerja
                                           </h3>
                                       </div>
                                       <ul className="space-y-3">
                                           {(data.indikatorKinerja || []).length > 0 ? (
-                                            (data.indikatorKinerja || []).map((target, index) => (
-                                              target && (
-                                                <li key={index} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-indigo-200 transition-colors">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-teal-400 mt-2 shrink-0"></div>
-                                                    <span className="text-slate-600 text-sm font-medium leading-relaxed">{target}</span>
-                                                </li>
-                                              )
+                                            (data.indikatorKinerja || []).map((target, index) => target && (
+                                              <li key={index} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-200 transition-colors">
+                                                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 shrink-0"></div>
+                                                  <span className="text-slate-600 text-sm font-medium leading-relaxed">{target}</span>
+                                              </li>
                                             ))
                                           ) : (
-                                            <p className="text-sm text-slate-400 italic">Belum ada data indikator.</p>
+                                            <p className="text-sm text-slate-400 italic">Tidak ada indikator.</p>
                                           )}
                                       </ul>
                                   </div>
                                 )}
 
-                                {/* 3. SIKLUS PERENCANAAN */}
+                                {/* Siklus Perencanaan */}
                                 {data.isSiklusActive && (
                                   <div className="space-y-5">
                                       <div className="flex items-center gap-2 mb-2">
@@ -435,8 +435,7 @@ export default function LayananProgramKerja() {
                                           {(data.siklusPerencanaan || []).length > 0 ? (
                                             (data.siklusPerencanaan || []).map((step, idx) => (
                                               <div key={idx} className="relative">
-                                                  {/* Logic Warna Dinamis dari Admin */}
-                                                  <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace(/ring-\w+-\d+/g, '').replace(/border-\w+-\d+/g, '').split(' ')[0]} ${getStepColor(step.color).match(/ring-\w+-\d+/)}`}>
+                                                  <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
                                                       {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
@@ -455,7 +454,7 @@ export default function LayananProgramKerja() {
                       </motion.div>
                     )}
 
-                    {/* === TAB 2: AGENDA KEGIATAN === */}
+                    {/* TAB 2: AGENDA */}
                     {activeTab === "agenda" && (
                         <motion.div
                         key="agenda"
@@ -470,29 +469,25 @@ export default function LayananProgramKerja() {
                                 <CalendarRange size={24} />
                             </div>
                             <div>
-                                <h3 className="text-xl font-bold text-slate-800">Agenda & Jadwal Konsultasi</h3>
-                                <p className="text-sm text-slate-400">Jadwal konsultasi perencanaan dan agenda kegiatan program.</p>
+                                <h3 className="text-xl font-bold text-slate-800">Agenda & Jadwal</h3>
+                                <p className="text-sm text-slate-400">Jadwal kegiatan dan monitoring program.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        <div className="grid gap-4">
+                          <div className="grid gap-4">
                             {(data.agendaKegiatan || []).length > 0 ? (
                               (data.agendaKegiatan || []).map((item, idx) => (
-                                <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'special' ? 'bg-amber-50/50 border-amber-100' : 'bg-white border-slate-100 hover:border-indigo-100'}`}>
+                                <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'special' ? 'bg-amber-50/50 border-amber-100' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
                                     <div className="flex items-center gap-4 mb-3 md:mb-0">
-                                        <div className={`p-3 rounded-xl ${item.status === 'special' ? 'bg-amber-100 text-amber-600' : 'bg-indigo-50 text-indigo-600'}`}>
+                                        <div className={`p-3 rounded-xl ${item.status === 'special' ? 'bg-amber-100 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>
                                             <ClipboardList size={24} />
                                         </div>
                                         <div>
-                                            <div className="flex items-center gap-2 flex-wrap">
+                                            <div className="flex items-center gap-2">
                                                 <h4 className="font-bold text-lg text-slate-800">{item.day}</h4>
-                                                {/* Badge Status Dinamis */}
                                                 {getStatusBadge(item.status)}
                                             </div>
-                                            <div className="flex items-center gap-2 text-slate-700 font-bold mt-1">
-                                                <TrendingUp size={16} className="text-slate-400"/>
-                                                {item.activity}
-                                            </div>
+                                            <div className="text-slate-700 font-bold mt-1 text-sm">{item.activity}</div>
                                         </div>
                                     </div>
                                     <div className="flex flex-col md:items-end gap-1 pl-14 md:pl-0">
@@ -506,11 +501,12 @@ export default function LayananProgramKerja() {
                                 </div>
                               ))
                             ) : (
-                              <p className="text-center text-slate-400 italic py-10">Agenda belum dijadwalkan.</p>
+                              <p className="text-center text-slate-400 italic py-10">Agenda belum tersedia.</p>
                             )}
-                        </div>
+                          </div>
+
                           {data.mapLink && (
-                           <a href={data.mapLink} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-indigo-600 font-medium cursor-pointer hover:underline mt-2">
+                           <a href={data.mapLink} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:underline mt-2">
                               <MapPin size={16} /> Lihat Lokasi Rapat di Google Maps
                            </a>
                           )}
@@ -523,17 +519,17 @@ export default function LayananProgramKerja() {
 
             {/* === KOLOM KANAN (Sidebar) === */}
             <motion.div 
-               layout 
-               initial={{ opacity: 0, x: 20 }}
-               animate={{ opacity: 1, x: 0 }}
-               transition={{ duration: 0.8, delay: 0.5 }}
-               className="lg:w-1/3 flex flex-col gap-6 order-1 lg:order-2 lg:sticky lg:top-8 h-fit z-30 relative"
+                layout 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+                className="lg:w-1/3 flex flex-col gap-6 order-1 lg:order-2 lg:sticky lg:top-8 h-fit z-30 relative"
             >
               <AnimatePresence>
                 {isUpdating && <UpdatingOverlay />}
               </AnimatePresence>
 
-              {/* 2. CTA BUTTON (Portal SIPD / E-Planning) - Dikontrol Admin */}
+              {/* Portal Button */}
               <AnimatePresence mode="popLayout">
                 {data.portalVisible && (
                     <motion.div
@@ -548,30 +544,30 @@ export default function LayananProgramKerja() {
                         href={data.portalUrl || "#"} 
                         target="_blank"
                         rel="noreferrer"
-                        className="group w-full py-5 bg-gradient-to-r from-teal-500 to-indigo-600 hover:from-teal-600 hover:to-indigo-700 text-white rounded-2xl font-bold text-center text-lg shadow-xl shadow-indigo-500/30 transition-all hover:-translate-y-1 flex items-center justify-center gap-3 relative overflow-hidden"
+                        className="group w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-bold text-center text-lg shadow-xl shadow-blue-500/30 transition-all hover:-translate-y-1 flex items-center justify-center gap-3 relative overflow-hidden"
                       >
                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                         <Globe className="relative z-10" size={20}/>
-                        <span className="relative z-10">{data.portalLabel || "Akses SIPD / E-Planning"}</span>
+                        <span className="relative z-10">{data.portalLabel || "Akses Aplikasi"}</span>
                         <ArrowRight className="group-hover:translate-x-1 transition-transform relative z-10" size={20} />
                       </a>
                     </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* 3. DOWNLOAD AREA (Templates) - Data dari Admin */}
+              {/* Download Area */}
               <motion.div 
                 layout 
                 transition={{ duration: 0.4, ease: "easeInOut" }}
                 className="bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-slate-100 relative overflow-hidden"
               >
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-indigo-400"></div>
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400"></div>
                 <div className="mb-6">
                     <h3 className="font-bold text-slate-800 flex items-center gap-3 mb-2">
                         <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
                             <Download size={20} />
                         </div>
-                        {data.downloadSectionTitle || "Template Dokumen"}
+                        {data.downloadSectionTitle || "Unduh Dokumen"}
                     </h3>
                     {data.downloadSectionDesc && (
                       <p className="text-sm text-slate-500 leading-relaxed">
@@ -585,7 +581,7 @@ export default function LayananProgramKerja() {
                     (data.downloads || []).map((file, index) => (
                       <a key={index} href={file.url} target="_blank" rel="noreferrer" className="flex items-center justify-between p-4 bg-slate-50 hover:bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group cursor-pointer">
                         <div className="flex items-center gap-4 overflow-hidden">
-                          <div className="w-10 h-10 bg-white text-teal-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
+                          <div className="w-10 h-10 bg-white text-blue-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
                             <FileText size={20} />
                           </div>
                           <span className="text-sm font-medium text-slate-700 truncate group-hover:text-indigo-700 transition">
@@ -598,31 +594,31 @@ export default function LayananProgramKerja() {
                   ) : (
                       <div className="py-6 text-center px-4">
                         <p className="text-sm text-slate-500 italic font-medium">
-                            Belum ada dokumen template.
+                            Belum ada dokumen yang tersedia.
                         </p>
                       </div>
                   )}
                 </div>
               </motion.div>
 
-              {/* 4. CONTACT CARD - Konfigurasi dari Admin */}
+              {/* Contact Card */}
               <motion.div 
                 layout 
                 transition={{ duration: 0.4, ease: "easeInOut" }}
                 className="bg-[#0f172a] text-white rounded-3xl shadow-xl p-8 relative overflow-hidden group"
               >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl translate-x-10 -translate-y-10 group-hover:bg-indigo-500/30 transition-colors"></div>
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-teal-500/20 rounded-full blur-3xl -translate-x-10 translate-y-10"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl translate-x-10 -translate-y-10 group-hover:bg-blue-500/30 transition-colors"></div>
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl -translate-x-10 translate-y-10"></div>
                 
                 <div className="relative z-10 mb-8">
                     <h3 className="font-bold mb-4 flex items-center gap-3 text-white">
                         <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
-                            <ContactIcon className="text-yellow-400" size={20} />
+                            <ContactIconComponent className="text-yellow-400" size={20} />
                         </div>
-                        {data.contactSectionTitle || "Konsultasi Program"}
+                        {data.contactSectionTitle || "Kontak Layanan"}
                     </h3>
                     <p className="text-sm text-slate-400 leading-relaxed">
-                        {data.contactSectionDesc || "Hubungi tim perencanaan untuk asistensi penyusunan."}
+                        {data.contactSectionDesc || "Hubungi tim perencana jika ada kendala."}
                     </p>
                 </div>
 
@@ -631,11 +627,11 @@ export default function LayananProgramKerja() {
                       (data.contacts || []).map((contact, i) => (
                         <div key={i} className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-colors backdrop-blur-md">
                             <div className="bg-yellow-400 p-2.5 rounded-full text-slate-900 shadow-lg shadow-yellow-400/20">
-                            <ContactIcon size={18} />
+                            <Phone size={18} />
                             </div>
                             <div>
                             <p className="text-[10px] text-yellow-200 uppercase font-bold tracking-wider mb-0.5">
-                                {contact.name || "Perencana"}
+                                {contact.name || "Admin"}
                             </p>
                             <p className="font-bold text-lg tracking-wide">
                                 {contact.number}
@@ -645,13 +641,14 @@ export default function LayananProgramKerja() {
                       ))
                   ) : (
                       <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
-                        Kontak belum tersedia.
+                        Belum ada kontak tersedia.
                       </div>
                   )}
                 </div>
               </motion.div>
 
             </motion.div>
+
           </div>
         </div>
       </div>

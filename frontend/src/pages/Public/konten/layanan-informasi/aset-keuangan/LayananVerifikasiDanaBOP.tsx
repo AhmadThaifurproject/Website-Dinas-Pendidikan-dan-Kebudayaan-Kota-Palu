@@ -22,8 +22,15 @@ import {
   CheckCheck, // Icon Utama Verifikasi
   Users,
   Building,
-  ClipboardList
+  ClipboardList,
+  Banknote, // Icon Banknote
+  CreditCard, // Icon CreditCard
+  PieChart // Icon PieChart
 } from "lucide-react";
+
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 // --- TIPE DATA DARI BACKEND ---
 interface ContentData {
@@ -104,8 +111,8 @@ export default function LayananVerifikasiDanaBOP() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // PERUBAHAN: Endpoint disesuaikan untuk verif-dana-bop
-        const response = await fetch("http://localhost:8000/api/asetdankeuangan/content/verif-dana-bop");
+        // ✅ GANTI DENGAN API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/asetdankeuangan/content/verif-dana-bop`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -147,8 +154,8 @@ export default function LayananVerifikasiDanaBOP() {
   const viewerProps = {
     judul: "Juknis Verifikasi Dana BOP",
     deskripsi: "Pedoman verifikasi Bantuan Operasional Pendidikan untuk PAUD, TK, SKB, dan PKBM.",
-    // Endpoint sanitasi: asetkeuangan -> asetdankeuangan
-    endpoint: "http://localhost:8000/api/asetdankeuangan/upload/verif-dana-bop", 
+    // ✅ GANTI DENGAN API_BASE_URL
+    endpoint: `${API_BASE_URL}/public/asetdankeuangan/upload/verif-dana-bop`, 
   };
 
   // --- HELPER FUNCTIONS ---
@@ -181,6 +188,9 @@ export default function LayananVerifikasiDanaBOP() {
         case "Settings": return Settings;
         case "Database": return Database;
         case "Layout": return Layout;
+        case "DollarSign": return Banknote;
+        case "CreditCard": return CreditCard;
+        case "PieChart": return PieChart;
         case "FileText": default: return CheckCheck; // Default icon verifikasi
     }
   };
@@ -425,7 +435,7 @@ export default function LayananVerifikasiDanaBOP() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -461,10 +471,10 @@ export default function LayananVerifikasiDanaBOP() {
                                 <h3 className="text-xl font-bold text-slate-800">Jam Layanan Verifikasi</h3>
                                 <p className="text-sm text-slate-400">Waktu pelayanan tatap muka untuk verifikasi berkas BOP.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-indigo-100'}`}>
@@ -506,7 +516,7 @@ export default function LayananVerifikasiDanaBOP() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
                           {/* Link Peta */}
                           {data.mapLink && (
@@ -573,7 +583,7 @@ export default function LayananVerifikasiDanaBOP() {
                         <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
                             <Download size={20} />
                         </div>
-                        {data.downloadSectionTitle || "Dokumen Verifikasi"}
+                        {data.downloadSectionTitle || "Area Download"}
                     </h3>
                     {data.downloadSectionDesc && (
                       <p className="text-sm text-slate-500 leading-relaxed">
@@ -646,9 +656,9 @@ export default function LayananVerifikasiDanaBOP() {
                         </div>
                       ))
                   ) : (
-                     <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
+                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
                         Belum ada kontak tersedia.
-                     </div>
+                      </div>
                   )}
                 </div>
               </motion.div>

@@ -1,89 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import axios from 'axios'; 
 
+// Interface Data (Subtitle sudah dihapus)
 interface Profile {
+  id: string;
   name: string;
   title: string;
-  subtitle: string;
-  image: string;
-  description: string;
+  image: string; 
+  description: string[] | string; // Bisa array atau string JSON dari server
+  category: 'pimpinan' | 'bidang';
 }
 
 const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('pimpinan');
+  const [dbProfiles, setDbProfiles] = useState<Profile[]>([]);
 
-  const profiles: Record<string, Profile[]> = {
-    pimpinan: [
-      {
-        name: 'Hardi, S.Pd., M.Pd.',
-        title: 'Kepala Dinas Pendidikan',
-        subtitle: 'Kota Palu',
-        image: 'public/images/foto2 struktural disdikbud/Pak_Hardi_KADIS_DISDIKBUD_PALU.JPG',
-        description: 'Bertanggung jawab atas seluruh kegiatan pendidikan di Kota Palu.'
-      },
-      {
-        name: 'Evi Oktavia, S.T., M.M.',
-        title: 'Sekretaris Dinas Pendidikan',
-        subtitle: 'Kota Palu',
-        image: 'public/images/foto2 struktural disdikbud/Ibu_EVI_Sekretaris_DISDIKBUD.JPG',
-        description: 'Mengelola administrasi, keuangan, dan koordinasi antar bidang.'
-      }
-    ],
-    bidang: [
-      {
-        name: 'Taufik, S.Sos., M.Si',
-        title: 'Kepala Bidang PAUD',
-        subtitle: 'Pendidikan Anak Usia Dini',
-        image: 'public/images/foto2 struktural disdikbud/Pak Taufik Kabid PAUD.JPG',
-        description: 'Mengembangkan dan mengawasi program PAUD.'
-      },
-      {
-        name: 'Ahmadi, SE.,M.Pd',
-        title: 'Kepala Bidang SD',
-        subtitle: 'Sekolah Dasar',
-        image: 'public/images/foto2 struktural disdikbud/Pak Ahmadi KABID SD.JPG',
-        description: 'Mengelola pendidikan tingkat sekolah dasar.'
-      },
-      {
-        name: 'Erwin, S.Pd.,M.PFis',
-        title: 'Kepala Bidang SMP',
-        subtitle: 'Sekolah Menengah Pertama',
-        image: 'public/images/foto2 struktural disdikbud/Pak Erwin KABID SMP.jpg',
-        description: 'Bertanggung jawab atas pendidikan menengah pertama.'
-      },
-      {
-        name: 'Titi Rahma, SE.,M.Ak',
-        title: 'Kepala Bidang Ketenagaan',
-        subtitle: 'Manajemen SDM',
-        image: 'public/images/foto2 struktural disdikbud/avatar-1577909_1920.png',
-        description: 'Mengelola pembinaan tenaga pendidik.'
-      },
-      {
-        name: 'Arham, S.Pd.,M.Si',
-        title: 'Kepala Bidang Kebudayaan',
-        subtitle: 'Pengembangan Budaya',
-        image: 'public/images/foto2 struktural disdikbud/Pak Arham Kabid Kebudayaan (1).JPG',
-        description: 'Melestarikan nilai budaya dalam pendidikan.'
-      },
-      {
-        name: 'Siti Patimasang, SE., MM',
-        title: 'Analisis Keuangan Pusat dan Daerah Ahli Muda',
-        subtitle: 'Keuangan Daerah',
-        image: 'public/images/foto2 struktural disdikbud/ibu siti KABID Aset dan Keuangan.jpg',
-        description: 'Mengelola dan menganalisis keuangan daerah secara profesional.'
-      },
-      {
-        name: 'Masnuni, S.Sos',
-        title: 'Kasubag Kepegawaian dan Umum',
-        subtitle: 'Kepegawaian & Administrasi',
-        image: 'public/images/foto2 struktural disdikbud/avatar-1577909_1920.png',
-        description: 'Mendukung kelancaran administrasi dan kepegawaian dinas.'
-      }
-    ],
-  };
+  // --- ENVIRONMENT VARIABLES ---
+  const API_URL = import.meta.env.VITE_API_URL;
+  // Hapus '/api' di akhir untuk mendapatkan root domain
+  const STORAGE_BASE = API_URL?.replace(/\/api$/, '') || '';
 
-  const bidangInfo = {
+  const bidangInfo: Record<string, string> = {
     pimpinan: 'Pimpinan Dinas Pendidikan Kota Palu bertanggung jawab atas perencanaan strategis dan pengembangan pendidikan.',
     bidang: 'Bidang teknis mengelola program pendidikan sesuai jenjang untuk peningkatan kualitas.',
     struktur: 'Struktur organisasi Dinas Pendidikan Kota Palu mencerminkan koordinasi yang efisien dan kolaboratif antar bidang.'
@@ -94,6 +33,35 @@ const ProfilePage: React.FC = () => {
     { id: 'bidang', label: 'Kepala Bidang' },
     { id: 'struktur', label: 'Struktur Organisasi' }
   ];
+
+  // --- FETCH DATA FROM API ---
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Gunakan timestamp agar data selalu fresh
+        const res = await axios.get(`${API_URL}/public/profiles?t=${new Date().getTime()}`);
+        setDbProfiles(res.data);
+      } catch (err) { console.error("Gagal memuat data profil:", err); }
+    };
+    loadData();
+  }, []);
+
+  // Filter data sesuai tab aktif
+  const filteredProfiles = dbProfiles.filter(p => p.category === activeTab);
+
+  // --- HELPER GAMBAR YANG SEMPURNA (Sama seperti di Admin) ---
+  const getImageUrl = (path: string) => {
+    if (!path) return ""; 
+    
+    // 1. Jika path sudah lengkap (https://...) biarkan
+    if (path.startsWith('http')) return path;
+
+    // 2. Bersihkan path (hapus slash di depan jika ada)
+    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    
+    // 3. Gabungkan dengan STORAGE_BASE
+    return `${STORAGE_BASE}/storage/${cleanPath}`;
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
@@ -204,7 +172,7 @@ const ProfilePage: React.FC = () => {
                             transition={{ duration: 0.3 }}
                             className="text-slate-600 leading-relaxed text-lg"
                         >
-                            {bidangInfo[activeTab as keyof typeof bidangInfo]}
+                            {bidangInfo[activeTab]}
                         </motion.p>
                     </AnimatePresence>
                 </div>
@@ -222,8 +190,9 @@ const ProfilePage: React.FC = () => {
                         className="flex justify-center"
                     >
                         <div className="bg-white p-4 rounded-3xl shadow-xl border border-slate-100 max-w-4xl w-full">
+                            {/* Gambar statis untuk struktur organisasi */}
                             <img
-                                src="public/images/Struktur Disdikbud.jpg"
+                                src="/images/Struktur Disdikbud.jpg" 
                                 alt="Struktur Organisasi"
                                 className="w-full h-auto rounded-2xl"
                             />
@@ -239,13 +208,12 @@ const ProfilePage: React.FC = () => {
                     >
                         <div className={`gap-8 w-full ${
                             activeTab === 'pimpinan' 
-                                ? 'flex flex-wrap justify-center' // Centered layout for small number of items
+                                ? 'flex flex-wrap justify-center' 
                                 : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-                            }`}
-                        >
-                            {profiles[activeTab].map((profile, index) => (
+                        }`}>
+                            {filteredProfiles.map((profile, index) => (
                                 <motion.div
-                                    key={index}
+                                    key={profile.id || index}
                                     initial={{ opacity: 0, y: 30 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -253,16 +221,20 @@ const ProfilePage: React.FC = () => {
                                 >
                                     <div className="aspect-[3/4] overflow-hidden relative bg-slate-200">
                                         <img
-                                            src={profile.image}
+                                            // FIX: Gunakan helper getImageUrl untuk memastikan path benar
+                                            src={getImageUrl(profile.image)}
                                             alt={profile.name}
                                             className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                                            onError={(e) => {
+                                                // Fallback ke avatar inisial jika gambar error
+                                                (e.target as HTMLImageElement).src = "https://ui-avatars.com/api/?name=" + profile.name;
+                                            }}
                                         />
                                         {/* Overlay Gradient */}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
                                         
                                         {/* Floating Title on Image */}
                                         <div className="absolute bottom-0 left-0 p-6 w-full text-white">
-                                            <p className="text-sm font-medium text-blue-300 mb-1 uppercase tracking-wider">{profile.subtitle}</p>
                                             <h3 className="text-xl font-bold leading-tight">{profile.name}</h3>
                                         </div>
                                     </div>
@@ -272,9 +244,25 @@ const ProfilePage: React.FC = () => {
                                                 {profile.title}
                                             </span>
                                         </div>
-                                        <p className="text-slate-500 text-sm leading-relaxed">
-                                            {profile.description}
-                                        </p>
+                                        
+                                        {/* RENDER DESKRIPSI PER POINT (ARRAY) */}
+                                        <ul className="space-y-2">
+                                            {/* Parsing Deskripsi Aman */}
+                                            {(() => {
+                                              const desc = Array.isArray(profile.description) 
+                                                ? profile.description 
+                                                : (typeof profile.description === 'string' && profile.description.startsWith('[') 
+                                                    ? JSON.parse(profile.description) 
+                                                    : [profile.description]);
+
+                                              return desc.map((point: string, i: number) => (
+                                                <li key={i} className="text-slate-500 text-sm flex gap-2 items-start leading-relaxed">
+                                                    <span className="text-blue-400 font-bold mt-1">•</span> 
+                                                    <span>{point}</span>
+                                                </li>
+                                              ));
+                                            })()}
+                                        </ul>
                                     </div>
                                 </motion.div>
                             ))}

@@ -24,6 +24,10 @@ import {
   ClipboardCheck
 } from "lucide-react";
 
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 // --- TIPE DATA DARI BACKEND (Standar Konsisten) ---
 interface ContentData {
   layanan: string;
@@ -103,8 +107,8 @@ export default function LayananLegalisirSKHU() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Endpoint disesuaikan untuk Legalisir SKHU
-        const response = await fetch("http://localhost:8000/api/paud/content/legalisir-skhu");
+        // ✅ GUNAKAN API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/paud/content/legalisir-skhu`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -143,11 +147,11 @@ export default function LayananLegalisirSKHU() {
   }, [initialLoading]); 
 
   // --- VIEWER PROPS ---
-  // Endpoint disesuaikan untuk upload/viewer Legalisir SKHU
+  // ✅ GUNAKAN API_BASE_URL
   const viewerProps = {
     judul: "Contoh Dokumen SKHU",
     deskripsi: "Contoh format dokumen SKHU yang dapat dilegalisir.",
-    endpoint: "http://localhost:8000/api/paud/upload/legalisir-skhu", 
+    endpoint: `${API_BASE_URL}/public/paud/upload/legalisir-skhu`, 
   };
 
   // --- HELPER FUNCTIONS ---
@@ -355,15 +359,15 @@ export default function LayananLegalisirSKHU() {
                                     <FileText size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-slate-800">Pratinjau</h3>
+                                    <h3 className="text-xl font-bold text-slate-800">Pratinjau Dokumen</h3>
                                 </div>
                             </div>
 
                             {/* CONTAINER PREVIEWER */}
                             <div className="w-full h-[500px] bg-slate-50 rounded-2xl border border-slate-200 shadow-inner relative isolate overflow-hidden overscroll-contain transform-gpu z-0">
                                 <LayananViewer
-                                    judul="" 
-                                    deskripsi=""
+                                    judul={viewerProps.judul} 
+                                    deskripsi={viewerProps.deskripsi}
                                     endpoint={viewerProps.endpoint} 
                                 />
                             </div>
@@ -386,8 +390,8 @@ export default function LayananLegalisirSKHU() {
                                   <div className="space-y-5">
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                                              <ClipboardCheck className="text-blue-500" size={20}/>
-                                              Syarat Legalisir
+                                              <CheckCircle className="text-blue-500" size={20}/>
+                                              Persyaratan Berkas
                                           </h3>
                                       </div>
                                       <ul className="space-y-3">
@@ -413,7 +417,7 @@ export default function LayananLegalisirSKHU() {
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                               <Briefcase className="text-indigo-500" size={20}/>
-                                              Alur Proses
+                                              Alur Pelayanan
                                           </h3>
                                       </div>
                                       <div className="relative pl-6 border-l-2 border-slate-100 space-y-6">
@@ -421,7 +425,7 @@ export default function LayananLegalisirSKHU() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -457,10 +461,10 @@ export default function LayananLegalisirSKHU() {
                                 <h3 className="text-xl font-bold text-slate-800">Jadwal Pelayanan</h3>
                                 <p className="text-sm text-slate-400">Informasi hari dan jam buka layanan legalisir.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
@@ -502,7 +506,7 @@ export default function LayananLegalisirSKHU() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
                           {/* Link Peta */}
                           {data.mapLink && (

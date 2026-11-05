@@ -29,6 +29,10 @@ import {
   HelpCircle
 } from "lucide-react";
 
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 // --- TIPE DATA DARI BACKEND (Sesuai FormInputDataPerencanaan.tsx) ---
 interface ContentData {
   layanan: string;
@@ -112,8 +116,8 @@ export default function LayananApprovalNUPTK() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Endpoint: api/perencanaan/content/approval-nuptk
-        const response = await fetch("http://localhost:8000/api/perencanaan/content/approval-nuptk");
+        // ✅ GANTI DENGAN API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/perencanaan/content/approval-nuptk`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -243,10 +247,11 @@ export default function LayananApprovalNUPTK() {
   const ContactIconService = getContactIconComponent(data.contactSectionIcon);
 
   // Props untuk LayananViewer (Dinamic from Admin)
+  // ✅ GANTI DENGAN API_BASE_URL
   const viewerProps = {
     judul: data.previewSectionTitle || "Pratinjau Regulasi",
     deskripsi: data.previewSectionDesc || "Dokumen teknis dan regulasi terkait layanan ini.",
-    endpoint: "http://localhost:8000/api/perencanaan/upload/approval-nuptk", 
+    endpoint: `${API_BASE_URL}/public/perencanaan/upload/approval-nuptk`, 
   };
 
   return (
@@ -395,7 +400,7 @@ export default function LayananApprovalNUPTK() {
                             {/* CONTAINER PREVIEWER */}
                             <div className="w-full h-[500px] bg-slate-50 rounded-2xl border border-slate-200 shadow-inner relative isolate overflow-hidden overscroll-contain transform-gpu z-0">
                                 <LayananViewer
-                                    judul="" // Kosongkan krn sudah ada di header atasnya
+                                    judul="" 
                                     deskripsi=""
                                     endpoint={viewerProps.endpoint} 
                                 />
@@ -420,7 +425,7 @@ export default function LayananApprovalNUPTK() {
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                               <CheckCircle className="text-blue-500" size={20}/>
-                                              Syarat Pengajuan
+                                              Dokumen Persyaratan
                                           </h3>
                                       </div>
                                       <ul className="space-y-3">
@@ -446,7 +451,7 @@ export default function LayananApprovalNUPTK() {
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                               <Briefcase className="text-indigo-500" size={20}/>
-                                              Alur Pengajuan
+                                              Alur Approval
                                           </h3>
                                       </div>
                                       <div className="relative pl-6 border-l-2 border-slate-100 space-y-6">
@@ -454,7 +459,7 @@ export default function LayananApprovalNUPTK() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -487,13 +492,13 @@ export default function LayananApprovalNUPTK() {
                                 <Clock size={24} />
                             </div>
                             <div>
-                                <h3 className="text-xl font-bold text-slate-800">Jadwal Pelayanan Perencanaan</h3>
-                                <p className="text-sm text-slate-400">Waktu pelayanan tatap muka di bagian perencanaan.</p>
+                                <h3 className="text-xl font-bold text-slate-800">Jadwal Pelayanan</h3>
+                                <p className="text-sm text-slate-400">Informasi hari dan jam buka layanan NUPTK.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
@@ -535,7 +540,7 @@ export default function LayananApprovalNUPTK() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
                           {/* Link Peta */}
                           {data.mapLink && (
@@ -564,7 +569,7 @@ export default function LayananApprovalNUPTK() {
                 {isUpdating && <UpdatingOverlay />}
               </AnimatePresence>
 
-              {/* 2. CTA BUTTON (Portal) */}
+              {/* 2. CTA BUTTON */}
               <AnimatePresence mode="popLayout">
                 {data.portalVisible && (
                     <motion.div
@@ -583,7 +588,7 @@ export default function LayananApprovalNUPTK() {
                       >
                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                         <Globe className="relative z-10" size={20}/>
-                        <span className="relative z-10">{data.portalLabel || "Akses Aplikasi"}</span>
+                        <span className="relative z-10">{data.portalLabel || "Akses Portal NUPTK"}</span>
                         <ArrowRight className="group-hover:translate-x-1 transition-transform relative z-10" size={20} />
                       </a>
                     </motion.div>
@@ -653,7 +658,7 @@ export default function LayananApprovalNUPTK() {
                         {data.contactSectionTitle || "Kontak Verifikator"}
                     </h3>
                     <p className="text-sm text-slate-400 leading-relaxed">
-                        {data.contactSectionDesc || "Ada kendala dengan NUPTK? Hubungi kami."}
+                        {data.contactSectionDesc || "Hubungi tim teknis jika ada kendala."}
                     </p>
                 </div>
 
@@ -666,7 +671,7 @@ export default function LayananApprovalNUPTK() {
                             </div>
                             <div>
                             <p className="text-[10px] text-yellow-200 uppercase font-bold tracking-wider mb-0.5">
-                                {contact.name || "Operator"}
+                                {contact.name || "Admin"}
                             </p>
                             <p className="font-bold text-lg tracking-wide">
                                 {contact.number}
@@ -675,9 +680,9 @@ export default function LayananApprovalNUPTK() {
                         </div>
                       ))
                   ) : (
-                     <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
+                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
                         Belum ada kontak tersedia.
-                     </div>
+                      </div>
                   )}
                 </div>
               </motion.div>

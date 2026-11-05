@@ -20,7 +20,9 @@ import {
   Layout,
   RefreshCw,
   ClipboardList, // Icon Konsultasi
-  Info,          // Icon Informasi
+  Info,
+  LockKeyhole,
+  ShieldCheck,          // Icon Informasi
   Landmark,      // Icon Kebudayaan/Kantor
   MessageSquare, // Icon Tanya Jawab
   Award,
@@ -28,6 +30,10 @@ import {
   Mail,
   HelpCircle
 } from "lucide-react";
+
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 // --- TIPE DATA DARI BACKEND (Sesuai Admin) ---
 interface ContentData {
@@ -112,8 +118,8 @@ export default function LayananInformasiKantor() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Endpoint disesuaikan untuk kebudayaan / informasi-kantor
-        const response = await fetch("http://localhost:8000/api/kebudayaan/content/informasi-kantor");
+        // ✅ GUNAKAN API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/kebudayaan/content/informasi-kantor`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -249,7 +255,8 @@ export default function LayananInformasiKantor() {
   const viewerProps = {
     judul: data.previewSectionTitle || "Informasi Langsung di Kantor",
     deskripsi: data.previewSectionDesc || "Layanan informasi dan data cagar budaya secara tatap muka di kantor kebudayaan.",
-    endpoint: "http://localhost:8000/api/kebudayaan/upload/informasi-kantor", 
+    // ✅ GUNAKAN API_BASE_URL
+    endpoint: `${API_BASE_URL}/public/kebudayaan/upload/informasi-kantor`, 
   };
 
   return (
@@ -382,16 +389,11 @@ export default function LayananInformasiKantor() {
                         {/* 1. FILE PREVIEW UTAMA */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
-                                    <FileText size={24} />
+                                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                                    <LockKeyhole size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-slate-800">
-                                      {viewerProps.judul}
-                                    </h3>
-                                    <p className="text-sm text-slate-500">
-                                      {viewerProps.deskripsi}
-                                    </p>
+                                    <h3 className="text-xl font-bold text-slate-800">Pratinjau Panduan</h3>
                                 </div>
                             </div>
 
@@ -422,22 +424,22 @@ export default function LayananInformasiKantor() {
                                   <div className="space-y-5">
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                                              <CheckCircle className="text-blue-500" size={20}/>
-                                              Syarat & Ketentuan
+                                              <CheckCircle className="text-indigo-500" size={20}/>
+                                              Data Diperlukan
                                           </h3>
                                       </div>
                                       <ul className="space-y-3">
                                           {data.persyaratan.length > 0 ? (
                                             data.persyaratan.map((req, index) => (
                                               req && (
-                                                <li key={index} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-200 transition-colors">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 shrink-0"></div>
+                                                <li key={index} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-indigo-200 transition-colors">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-2 shrink-0"></div>
                                                     <span className="text-slate-600 text-sm font-medium leading-relaxed">{req}</span>
                                                 </li>
                                               )
                                             ))
                                           ) : (
-                                            <p className="text-sm text-slate-400 italic">Tidak ada persyaratan khusus.</p>
+                                            <p className="text-sm text-slate-400 italic">Belum ada data persyaratan.</p>
                                           )}
                                       </ul>
                                   </div>
@@ -448,8 +450,8 @@ export default function LayananInformasiKantor() {
                                   <div className="space-y-5">
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                                              <Briefcase className="text-indigo-500" size={20}/>
-                                              Alur Pelayanan
+                                              <ShieldCheck className="text-purple-500" size={20}/>
+                                              Langkah Reset
                                           </h3>
                                       </div>
                                       <div className="relative pl-6 border-l-2 border-slate-100 space-y-6">
@@ -457,7 +459,7 @@ export default function LayananInformasiKantor() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -486,23 +488,23 @@ export default function LayananInformasiKantor() {
                         className="space-y-8"
                       >
                           <div className="flex items-center gap-3 mb-6">
-                            <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
+                            <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
                                 <Clock size={24} />
                             </div>
                             <div>
-                                <h3 className="text-xl font-bold text-slate-800">Jadwal Pelayanan Kantor</h3>
-                                <p className="text-sm text-slate-400">Waktu pelayanan tatap muka di kantor kebudayaan.</p>
+                                <h3 className="text-xl font-bold text-slate-800">Jam Layanan Teknis</h3>
+                                <p className="text-sm text-slate-400">Waktu pelayanan untuk bantuan teknis akun pajak.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
-                                <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
+                                <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-indigo-100'}`}>
                                     {/* Hari */}
                                     <div className="flex items-center gap-4 mb-3 md:mb-0">
-                                        <div className={`p-3 rounded-xl ${item.status === 'off' ? 'bg-rose-100 text-rose-600' : 'bg-blue-50 text-blue-600'}`}>
+                                        <div className={`p-3 rounded-xl ${item.status === 'off' ? 'bg-rose-100 text-rose-600' : 'bg-indigo-50 text-indigo-600'}`}>
                                             <Calendar size={24} />
                                         </div>
                                         <div>
@@ -538,11 +540,11 @@ export default function LayananInformasiKantor() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
                           {/* Link Peta */}
                           {data.mapLink && (
-                           <a href={data.mapLink} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:underline mt-2">
+                           <a href={data.mapLink} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-indigo-600 font-medium cursor-pointer hover:underline mt-2">
                               <MapPin size={16} /> Lihat Lokasi Kantor di Google Maps
                            </a>
                           )}
@@ -678,9 +680,9 @@ export default function LayananInformasiKantor() {
                         </div>
                       ))
                   ) : (
-                     <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
+                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
                         Belum ada kontak tersedia.
-                     </div>
+                      </div>
                   )}
                 </div>
               </motion.div>

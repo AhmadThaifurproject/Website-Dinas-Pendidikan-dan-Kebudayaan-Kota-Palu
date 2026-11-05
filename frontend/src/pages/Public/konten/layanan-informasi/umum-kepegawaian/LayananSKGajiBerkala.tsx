@@ -34,6 +34,10 @@ import {
   BadgePercent      // Ikon Tunjangan
 } from "lucide-react";
 
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 // --- TIPE DATA (Sesuai Struktur Admin) ---
 interface ContentData {
   layanan: string;
@@ -125,7 +129,8 @@ export default function LayananSKGajiBerkala() {
     const fetchData = async () => {
       try {
         // ENDPOINT: SK Gaji Berkala
-        const response = await fetch("http://localhost:8000/api/kepegawaian/content/sk-gaji-berkala");
+        // ✅ PERUBAHAN: Endpoint dinamis menggunakan API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/kepegawaian/content/sk-gaji-berkala`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -154,8 +159,9 @@ export default function LayananSKGajiBerkala() {
   }, [initialLoading]); 
 
   // --- VIEWER PROPS ---
+  // ✅ PERUBAHAN: Endpoint dinamis
   const viewerProps = {
-    endpoint: "http://localhost:8000/api/kepegawaian/upload/sk-gaji-berkala", 
+    endpoint: `${API_BASE_URL}/public/kepegawaian/upload/sk-gaji-berkala`, 
   };
 
   // --- HELPER: COLOR MAPPING (Sinkron dengan Admin) ---
@@ -353,7 +359,7 @@ export default function LayananSKGajiBerkala() {
                     }`}
                   >
                     <CalendarClock size={20} />
-                    Jadwal TMT
+                    Jadwal Periode
                     {activeTab === "schedule" && (
                       <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600 rounded-t-full" />
                     )}
@@ -382,7 +388,7 @@ export default function LayananSKGajiBerkala() {
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-bold text-slate-800">
-                                        {data.previewSectionTitle || "Pratinjau Regulasi"}
+                                        {data.previewSectionTitle || "Pratinjau Dokumen"}
                                     </h3>
                                     {data.previewSectionDesc && (
                                         <p className="text-sm text-slate-500">{data.previewSectionDesc}</p>
@@ -417,7 +423,7 @@ export default function LayananSKGajiBerkala() {
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                               <CheckCircle className="text-indigo-500" size={20}/>
-                                              Syarat Kenaikan Gaji
+                                              Persyaratan Berkas
                                           </h3>
                                       </div>
                                       <ul className="space-y-3">
@@ -442,8 +448,8 @@ export default function LayananSKGajiBerkala() {
                                   <div className="space-y-5">
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                                              <TrendingUp className="text-indigo-500" size={20}/>
-                                              Proses Penerbitan SK
+                                              <Briefcase className="text-indigo-500" size={20}/>
+                                              Alur Pengajuan
                                           </h3>
                                       </div>
                                       <div className="relative pl-6 border-l-2 border-slate-100 space-y-6">
@@ -451,7 +457,7 @@ export default function LayananSKGajiBerkala() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace(/ring-\w+-\d+/g, '').replace(/border-\w+-\d+/g, '').split(' ')[0]} ${getStepColor(step.color).match(/ring-\w+-\d+/)}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -469,7 +475,7 @@ export default function LayananSKGajiBerkala() {
                       </motion.div>
                     )}
 
-                    {/* === TAB 2: JADWAL === */}
+                    {/* === TAB 2: JAM LAYANAN === */}
                     {activeTab === "schedule" && (
                         <motion.div
                         key="schedule"
@@ -484,15 +490,17 @@ export default function LayananSKGajiBerkala() {
                                 <Clock size={24} />
                             </div>
                             <div>
-                                <h3 className="text-xl font-bold text-slate-800">Jadwal Proses Gaji</h3>
-                                <p className="text-sm text-slate-400">Waktu pemrosesan data gaji bulanan.</p>
+                                <h3 className="text-xl font-bold text-slate-800">Waktu Pelayanan</h3>
+                                <p className="text-sm text-slate-400">Jadwal layanan konsultasi.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-indigo-100'}`}>
+                                    {/* Hari */}
                                     <div className="flex items-center gap-4 mb-3 md:mb-0">
                                         <div className={`p-3 rounded-xl ${item.status === 'off' ? 'bg-rose-100 text-rose-600' : 'bg-indigo-50 text-indigo-600'}`}>
                                             <Calendar size={24} />
@@ -504,6 +512,7 @@ export default function LayananSKGajiBerkala() {
                                             </div>
                                         </div>
                                     </div>
+                                    {/* Jam */}
                                     <div className="flex flex-col md:items-end gap-1 pl-14 md:pl-0">
                                         {item.status !== 'off' ? (
                                             <>
@@ -514,13 +523,13 @@ export default function LayananSKGajiBerkala() {
                                                 {item.breakTime && item.breakTime !== '-' && (
                                                     <div className="text-sm text-slate-400 flex items-center gap-2">
                                                         <span className="w-1.5 h-1.5 bg-orange-400 rounded-full"></span>
-                                                        Ket: {item.breakTime}
+                                                        Istirahat: {item.breakTime}
                                                     </div>
                                                 )}
                                             </>
                                         ) : (
                                             <div className="text-rose-500 font-medium text-sm italic flex items-center gap-2">
-                                                Tutup
+                                                Tidak ada pelayanan
                                             </div>
                                         )}
                                     </div>
@@ -529,11 +538,12 @@ export default function LayananSKGajiBerkala() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
+                          {/* Link Peta */}
                           {data.mapLink && (
                            <a href={data.mapLink} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-indigo-600 font-medium cursor-pointer hover:underline mt-2">
-                              <MapPin size={16} /> Lihat Lokasi Kantor
+                              <MapPin size={16} /> Lihat Lokasi Kantor di Google Maps
                            </a>
                           )}
                       </motion.div>
@@ -541,6 +551,7 @@ export default function LayananSKGajiBerkala() {
                   </AnimatePresence>
                 </div>
               </motion.div>
+
             </motion.div>
 
             {/* === KOLOM KANAN (Sidebar) === */}
@@ -551,6 +562,7 @@ export default function LayananSKGajiBerkala() {
                transition={{ duration: 0.8, delay: 0.5 }}
                className="lg:w-1/3 flex flex-col gap-6 order-1 lg:order-2 lg:sticky lg:top-8 h-fit z-30 relative"
             >
+              {/* === OVERLAY UPDATE ANIMATION === */}
               <AnimatePresence>
                 {isUpdating && <UpdatingOverlay />}
               </AnimatePresence>
@@ -593,7 +605,7 @@ export default function LayananSKGajiBerkala() {
                         <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
                             <Download size={20} />
                         </div>
-                        {data.downloadSectionTitle || "Unduh Dokumen"}
+                        {data.downloadSectionTitle || "Area Download"}
                     </h3>
                     {data.downloadSectionDesc && (
                       <p className="text-sm text-slate-500 leading-relaxed">
@@ -620,7 +632,7 @@ export default function LayananSKGajiBerkala() {
                   ) : (
                       <div className="py-6 text-center px-4">
                         <p className="text-sm text-slate-500 italic font-medium">
-                            Belum ada template dokumen yang tersedia.
+                            Belum ada dokumen yang tersedia.
                         </p>
                       </div>
                   )}
@@ -633,7 +645,6 @@ export default function LayananSKGajiBerkala() {
                 transition={{ duration: 0.4, ease: "easeInOut" }}
                 className="bg-[#0f172a] text-white rounded-3xl shadow-xl p-8 relative overflow-hidden group"
               >
-                {/* Background effects */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl translate-x-10 -translate-y-10 group-hover:bg-indigo-500/30 transition-colors"></div>
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/20 rounded-full blur-3xl -translate-x-10 translate-y-10"></div>
                 
@@ -642,13 +653,11 @@ export default function LayananSKGajiBerkala() {
                         <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
                             <ContactIconComponent className="text-yellow-400" size={20} />
                         </div>
-                        {data.contactSectionTitle || "Subbidang Kesejahteraan"}
+                        {data.contactSectionTitle || "Kontak Layanan"}
                     </h3>
-                    {data.contactSectionDesc && (
-                      <p className="text-sm text-slate-400 leading-relaxed">
-                          {data.contactSectionDesc}
-                      </p>
-                    )}
+                    <p className="text-sm text-slate-400 leading-relaxed">
+                        {data.contactSectionDesc || "Mengalami kendala terkait data ini? Hubungi tim teknis kami."}
+                    </p>
                 </div>
 
                 <div className="relative z-10 space-y-3">
@@ -656,11 +665,11 @@ export default function LayananSKGajiBerkala() {
                       data.contacts.map((contact, i) => (
                         <div key={i} className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-colors backdrop-blur-md">
                             <div className="bg-yellow-400 p-2.5 rounded-full text-slate-900 shadow-lg shadow-yellow-400/20">
-                              <ContactIconComponent size={18} />
+                            <ContactIconComponent size={18} />
                             </div>
                             <div>
                             <p className="text-[10px] text-yellow-200 uppercase font-bold tracking-wider mb-0.5">
-                                {contact.name || "Admin Gaji"}
+                                {contact.name || "Petugas"}
                             </p>
                             <p className="font-bold text-lg tracking-wide">
                                 {contact.number}

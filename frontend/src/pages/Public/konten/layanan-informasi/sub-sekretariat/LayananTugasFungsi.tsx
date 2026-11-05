@@ -4,11 +4,11 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import LayananViewer from "../../../../../feature/layanan/LayananViewer"; 
 import {
-  FileText,      // Icon Utama
-  Scale,         // Untuk Dasar Hukum
-  Users,         // Untuk Struktur Organisasi/Jabatan
-  Building2,     // Icon Gedung/Instansi
-  Briefcase,     // Icon Pekerjaan
+  FileText,       // Icon Utama
+  Scale,          // Untuk Dasar Hukum
+  Users,          // Untuk Struktur Organisasi/Jabatan
+  Building2,      // Icon Gedung/Instansi
+  Briefcase,      // Icon Pekerjaan
   Download,
   Phone,
   ArrowRight,
@@ -18,10 +18,19 @@ import {
   RefreshCw,
   CheckCircle2,
   ListChecks,
-  Network        // Untuk Struktur/Hierarki
+  Network,        // Untuk Struktur/Hierarki
+  MessageCircle,
+  Mail,
+  HelpCircle,
+  Clock,
+  Calendar
 } from "lucide-react";
 
-// --- TIPE DATA DARI BACKEND (Disesuaikan untuk Tugas & Fungsi) ---
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE (Sesuai Referensi BOS)
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+// --- TIPE DATA DARI BACKEND (Sesuai FormInputDataSubSekretariat.tsx) ---
 interface ContentData {
   layanan: string;
   
@@ -40,7 +49,7 @@ interface ContentData {
   
   downloads?: { name: string; url: string }[];
   
-  // Tab 2: Uraian Tugas Jabatan
+  // Mapping dari uraianTugas (Admin: jamOperasional)
   uraianTugas?: { 
     jabatan: string; 
     summary: string; 
@@ -104,12 +113,13 @@ export default function LayananTugasFungsi() {
   const [isUpdating, setIsUpdating] = useState(false);
   const prevContentRef = useRef<string>("");
 
-  // --- LOGIKA FETCHING (POLLING) ---
+  // --- LOGIKA FETCHING (POLLING SAMA SEPERTI REFERENSI) ---
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // ENDPOINT: Sub Sekretariat / Tugas Fungsi
-        const response = await fetch("http://localhost:8000/api/sub_sekretariat/content/tugas-fungsi");
+        // ✅ URL Sesuai Struktur Admin & Referensi BOS
+        // Pastikan route backend: /api/public/sub-sekretariat/content/tugas-fungsi
+        const response = await fetch(`${API_BASE_URL}/public/sub-sekretariat/content/tugas-fungsi`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -118,7 +128,7 @@ export default function LayananTugasFungsi() {
           if (prevContentRef.current !== stringifiedData) {
             if (!initialLoading) {
               setIsUpdating(true);
-              await new Promise(r => setTimeout(r, 800)); 
+              await new Promise(r => setTimeout(r, 800)); // Delay halus
             }
             setContent(rawData);
             prevContentRef.current = stringifiedData; 
@@ -133,6 +143,7 @@ export default function LayananTugasFungsi() {
     };
 
     fetchData(); 
+    // Polling setiap 3 detik
     const intervalId = setInterval(fetchData, 3000); 
     return () => clearInterval(intervalId);
   }, [initialLoading]); 
@@ -161,6 +172,9 @@ export default function LayananTugasFungsi() {
         case "Layout": return Layout;
         case "Phone": return Phone;
         case "FileText": return FileText;
+        case "MessageCircle": return MessageCircle;
+        case "Mail": return Mail;
+        case "HelpCircle": return HelpCircle;
         default: return defaultIcon; 
     }
   };
@@ -180,9 +194,9 @@ export default function LayananTugasFungsi() {
     );
   }
 
-  // --- FALLBACK DATA (Safe Default) ---
-  const defaultData: ContentData = {
-    layanan: "tugas_fungsi", 
+  // --- FALLBACK DATA ---
+  const data: ContentData = content || {
+    layanan: "tugas-fungsi", 
     isDasarHukumActive: false,
     isStrukturActive: false,
     dasarHukum: [],
@@ -205,31 +219,28 @@ export default function LayananTugasFungsi() {
     contacts: []
   };
 
-  // Merge content dengan defaultData agar tidak undefined
-  const data: ContentData = { ...defaultData, ...(content || {}) };
-
   const TabIconMain = getIconComponent(data.tabIcon, FileText);
   const ContactIcon = getIconComponent(data.contactSectionIcon, Phone);
 
-  // VIEWER PROPS (Endpoint untuk file Tugas Fungsi)
+  // VIEWER PROPS
   const viewerProps = {
-    judul: "", 
-    deskripsi: "",
-    endpoint: "http://localhost:8000/api/sub_sekretariat/upload/tugas-fungsi", 
+    judul: data.previewSectionTitle || "Dokumen SOTK",
+    deskripsi: data.previewSectionDesc || "Pratinjau dokumen tugas dan fungsi.",
+    endpoint: `${API_BASE_URL}/public/sub_sekretariat/upload/tugas-fungsi`, 
   };
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-500 selection:text-white">
       
-      {/* ================= HERO SECTION ================= */}
+      {/* ================= HERO SECTION (VISUAL WARNA SINKRON) ================= */}
       <div className="relative z-20 mb-12">
         <div className="bg-[#0f172a] pt-40 pb-48 px-6 rounded-b-[3rem] shadow-2xl relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-slate-900 to-[#1e293b]"></div>
-          {/* Aksen Biru & Ungu untuk kesan Institusional */}
+          {/* Gradient Warna Biru/Ungu seperti Referensi */}
           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/20 blur-[120px] rounded-full mix-blend-screen opacity-50"></div>
           <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-600/10 blur-[100px] rounded-full mix-blend-screen opacity-40"></div>
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
-          
+
           <div className="relative container mx-auto max-w-5xl text-center z-10">
             <motion.div 
               initial={{ opacity: 0, y: -20 }}
@@ -293,7 +304,7 @@ export default function LayananTugasFungsi() {
                 transition={{ duration: 0.4, type: "spring", stiffness: 100, damping: 15 }}
                 className="bg-white rounded-3xl shadow-2xl border border-slate-100 relative overflow-hidden flex flex-col h-fit"
               >
-                {/* Header Gradient */}
+                {/* Header Line (Sesuai Referensi) */}
                 <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500 z-10"></div>
 
                 {/* --- NAVIGATION TABS --- */}
@@ -305,7 +316,7 @@ export default function LayananTugasFungsi() {
                     }`}
                   >
                     <TabIconMain size={20} />
-                    {data.tabTitle || "Regulasi & Struktur"}
+                    {data.tabTitle}
                     {activeTab === "tupoksi" && (
                       <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600 rounded-t-full" />
                     )}
@@ -329,7 +340,7 @@ export default function LayananTugasFungsi() {
                 <div className="p-6 md:p-8 flex-1 bg-white relative">
                   <AnimatePresence mode="wait">
                     
-                    {/* === TAB 1: DOKUMEN & STRUKTUR === */}
+                    {/* TAB 1: DOKUMEN & STRUKTUR */}
                     {activeTab === "tupoksi" && (
                       <motion.div
                         key="tupoksi"
@@ -339,21 +350,18 @@ export default function LayananTugasFungsi() {
                         transition={{ duration: 0.3 }}
                         className="space-y-10"
                       >
-                        {/* 1. FILE PREVIEW UTAMA */}
+                        {/* 1. FILE PREVIEW */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                                {/* Warna Icon (Purple/Indigo) */}
+                                <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
                                     <Building2 size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-slate-800">{data.previewSectionTitle || "Dokumen SOTK"}</h3>
-                                    {data.previewSectionDesc && (
-                                        <p className="text-sm text-slate-500">{data.previewSectionDesc}</p>
-                                    )}
+                                    <h3 className="text-xl font-bold text-slate-800">{viewerProps.judul}</h3>
+                                    <p className="text-sm text-slate-500">{viewerProps.deskripsi}</p>
                                 </div>
                             </div>
-
-                            {/* CONTAINER PREVIEWER */}
                             <div className="w-full h-[500px] bg-slate-50 rounded-2xl border border-slate-200 shadow-inner relative isolate overflow-hidden overscroll-contain transform-gpu z-0">
                                 <LayananViewer
                                     judul="" 
@@ -363,19 +371,12 @@ export default function LayananTugasFungsi() {
                             </div>
                         </div>
 
-                        {/* BAGIAN BAWAH */}
                         {(data.isDasarHukumActive || data.isStrukturActive) && (
-                          <motion.div 
-                            layout 
-                            initial={{ opacity: 0 }} 
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="space-y-10"
-                          >
+                          <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
                             <div className="border-t border-slate-100"></div>
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                
-                                {/* 2. DASAR HUKUM */}
+                                {/* Dasar Hukum */}
                                 {data.isDasarHukumActive && (
                                   <div className="space-y-5">
                                       <div className="flex items-center gap-2 mb-2">
@@ -385,14 +386,12 @@ export default function LayananTugasFungsi() {
                                           </h3>
                                       </div>
                                       <ul className="space-y-3">
-                                          {data.dasarHukum && data.dasarHukum.length > 0 ? (
-                                            (data.dasarHukum || []).map((hukum, index) => (
-                                              hukum && (
-                                                <li key={index} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-indigo-200 transition-colors">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div>
-                                                    <span className="text-slate-600 text-sm font-medium leading-relaxed">{hukum}</span>
-                                                </li>
-                                              )
+                                          {(data.dasarHukum || []).length > 0 ? (
+                                            (data.dasarHukum || []).map((hukum, index) => hukum && (
+                                              <li key={index} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-indigo-200 transition-colors">
+                                                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div>
+                                                  <span className="text-slate-600 text-sm font-medium leading-relaxed">{hukum}</span>
+                                              </li>
                                             ))
                                           ) : (
                                             <p className="text-sm text-slate-400 italic">Data dasar hukum belum tersedia.</p>
@@ -401,17 +400,17 @@ export default function LayananTugasFungsi() {
                                   </div>
                                 )}
 
-                                {/* 3. STRUKTUR ORGANISASI */}
+                                {/* Struktur Organisasi */}
                                 {data.isStrukturActive && (
                                   <div className="space-y-5">
                                       <div className="flex items-center gap-2 mb-2">
                                           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                                              <Network className="text-indigo-500" size={20}/>
+                                              <Network className="text-blue-500" size={20}/>
                                               Hierarki Jabatan
                                           </h3>
                                       </div>
                                       <div className="relative pl-6 border-l-2 border-slate-100 space-y-6">
-                                          {data.strukturOrganisasi && data.strukturOrganisasi.length > 0 ? (
+                                          {(data.strukturOrganisasi || []).length > 0 ? (
                                             (data.strukturOrganisasi || []).map((item, idx) => (
                                               <div key={idx} className="relative group">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getLevelColor(item.color)}`}>
@@ -433,7 +432,7 @@ export default function LayananTugasFungsi() {
                       </motion.div>
                     )}
 
-                    {/* === TAB 2: URAIAN TUGAS === */}
+                    {/* TAB 2: URAIAN TUGAS */}
                     {activeTab === "rincian" && (
                         <motion.div
                         key="rincian"
@@ -444,17 +443,17 @@ export default function LayananTugasFungsi() {
                         className="space-y-8"
                       >
                           <div className="flex items-center gap-3 mb-6">
-                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                            <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
                                 <ListChecks size={24} />
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold text-slate-800">Uraian Tugas Jabatan</h3>
                                 <p className="text-sm text-slate-400">Rincian tugas pokok dan fungsi setiap jabatan struktural.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        <div className="grid gap-6">
-                            {data.uraianTugas && data.uraianTugas.length > 0 ? (
+                          <div className="grid gap-6">
+                            {(data.uraianTugas || []).length > 0 ? (
                               (data.uraianTugas || []).map((tugas, idx) => (
                                 <div key={idx} className="p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all bg-white group">
                                     <div className="flex items-start gap-4 mb-4">
@@ -488,7 +487,8 @@ export default function LayananTugasFungsi() {
                                   <p className="text-slate-400 italic">Belum ada rincian tugas.</p>
                               </div>
                             )}
-                        </div>
+                          </div>
+
                           {data.mapLink && (
                            <a href={data.mapLink} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-indigo-600 font-medium cursor-pointer hover:underline mt-2">
                               <MapPin size={16} /> Lihat Lokasi Kantor Utama
@@ -503,17 +503,17 @@ export default function LayananTugasFungsi() {
 
             {/* === KOLOM KANAN (Sidebar) === */}
             <motion.div 
-               layout 
-               initial={{ opacity: 0, x: 20 }}
-               animate={{ opacity: 1, x: 0 }}
-               transition={{ duration: 0.8, delay: 0.5 }}
-               className="lg:w-1/3 flex flex-col gap-6 order-1 lg:order-2 lg:sticky lg:top-8 h-fit z-30 relative"
+                layout 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+                className="lg:w-1/3 flex flex-col gap-6 order-1 lg:order-2 lg:sticky lg:top-8 h-fit z-30 relative"
             >
               <AnimatePresence>
                 {isUpdating && <UpdatingOverlay />}
               </AnimatePresence>
 
-              {/* 2. CTA BUTTON (Portal E-Kinerja / Anjab) */}
+              {/* Portal Button */}
               <AnimatePresence mode="popLayout">
                 {data.portalVisible && (
                     <motion.div
@@ -528,30 +528,30 @@ export default function LayananTugasFungsi() {
                         href={data.portalUrl || "#"} 
                         target="_blank"
                         rel="noreferrer"
-                        className="group w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-bold text-center text-lg shadow-xl shadow-indigo-500/30 transition-all hover:-translate-y-1 flex items-center justify-center gap-3 relative overflow-hidden"
+                        className="group w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-bold text-center text-lg shadow-xl shadow-blue-500/30 transition-all hover:-translate-y-1 flex items-center justify-center gap-3 relative overflow-hidden"
                       >
                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                         <Globe className="relative z-10" size={20}/>
-                        <span className="relative z-10">{data.portalLabel || "Akses E-Kinerja / Anjab"}</span>
+                        <span className="relative z-10">{data.portalLabel || "Akses Aplikasi"}</span>
                         <ArrowRight className="group-hover:translate-x-1 transition-transform relative z-10" size={20} />
                       </a>
                     </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* 3. DOWNLOAD AREA (Templates) */}
+              {/* Download Area */}
               <motion.div 
                 layout 
                 transition={{ duration: 0.4, ease: "easeInOut" }}
                 className="bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-slate-100 relative overflow-hidden"
               >
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-indigo-400"></div>
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400"></div>
                 <div className="mb-6">
                     <h3 className="font-bold text-slate-800 flex items-center gap-3 mb-2">
                         <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
                             <Download size={20} />
                         </div>
-                        {data.downloadSectionTitle || "Template Dokumen"}
+                        {data.downloadSectionTitle || "Unduh Dokumen"}
                     </h3>
                     {data.downloadSectionDesc && (
                       <p className="text-sm text-slate-500 leading-relaxed">
@@ -561,11 +561,11 @@ export default function LayananTugasFungsi() {
                 </div>
 
                 <div className="space-y-4">
-                  {data.downloads && data.downloads.length > 0 ? (
+                  {(data.downloads || []).length > 0 ? (
                     (data.downloads || []).map((file, index) => (
                       <a key={index} href={file.url} target="_blank" rel="noreferrer" className="flex items-center justify-between p-4 bg-slate-50 hover:bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group cursor-pointer">
                         <div className="flex items-center gap-4 overflow-hidden">
-                          <div className="w-10 h-10 bg-white text-teal-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
+                          <div className="w-10 h-10 bg-white text-blue-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
                             <FileText size={20} />
                           </div>
                           <span className="text-sm font-medium text-slate-700 truncate group-hover:text-indigo-700 transition">
@@ -578,14 +578,14 @@ export default function LayananTugasFungsi() {
                   ) : (
                       <div className="py-6 text-center px-4">
                         <p className="text-sm text-slate-500 italic font-medium">
-                            Belum ada dokumen template.
+                            Belum ada dokumen yang tersedia.
                         </p>
                       </div>
                   )}
                 </div>
               </motion.div>
 
-              {/* 4. CONTACT CARD (Sekretariat) */}
+              {/* Contact Card */}
               <motion.div 
                 layout 
                 transition={{ duration: 0.4, ease: "easeInOut" }}
@@ -599,19 +599,19 @@ export default function LayananTugasFungsi() {
                         <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
                             <ContactIcon className="text-yellow-400" size={20} />
                         </div>
-                        {data.contactSectionTitle || "Kontak Sekretariat"}
+                        {data.contactSectionTitle || "Kontak Layanan"}
                     </h3>
                     <p className="text-sm text-slate-400 leading-relaxed">
-                        {data.contactSectionDesc || "Hubungi kami untuk informasi kelembagaan lebih lanjut."}
+                        {data.contactSectionDesc || "Hubungi admin untuk informasi lebih lanjut."}
                     </p>
                 </div>
 
                 <div className="relative z-10 space-y-3">
-                  {data.contacts && data.contacts.length > 0 ? (
+                  {(data.contacts || []).length > 0 ? (
                       (data.contacts || []).map((contact, i) => (
                         <div key={i} className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-colors backdrop-blur-md">
                             <div className="bg-yellow-400 p-2.5 rounded-full text-slate-900 shadow-lg shadow-yellow-400/20">
-                            <ContactIcon size={18} />
+                            <Phone size={18} />
                             </div>
                             <div>
                             <p className="text-[10px] text-yellow-200 uppercase font-bold tracking-wider mb-0.5">
@@ -625,13 +625,14 @@ export default function LayananTugasFungsi() {
                       ))
                   ) : (
                       <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
-                        Kontak belum tersedia.
+                        Belum ada kontak tersedia.
                       </div>
                   )}
                 </div>
               </motion.div>
 
             </motion.div>
+
           </div>
         </div>
       </div>

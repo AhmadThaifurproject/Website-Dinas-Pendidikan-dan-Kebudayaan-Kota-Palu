@@ -29,6 +29,10 @@ import {
   HelpCircle
 } from "lucide-react";
 
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 // --- TIPE DATA DARI BACKEND (Sesuai Admin) ---
 interface ContentData {
   layanan: string;
@@ -112,8 +116,8 @@ export default function LayananPendataan() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // PENYESUAIAN: Endpoint mengarah ke 'kebudayaan/content/pendataan'
-        const response = await fetch("http://localhost:8000/api/kebudayaan/content/pendataan");
+        // ✅ GUNAKAN API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/kebudayaan/content/pendataan`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -247,7 +251,8 @@ export default function LayananPendataan() {
   const viewerProps = {
     judul: data.previewSectionTitle || "Pendataan Cagar Budaya",
     deskripsi: data.previewSectionDesc || "Proses inventarisasi situs dan benda bersejarah.",
-    endpoint: "http://localhost:8000/api/kebudayaan/upload/pendataan", 
+    // ✅ GUNAKAN API_BASE_URL
+    endpoint: `${API_BASE_URL}/public/kebudayaan/upload/pendataan`, 
   };
 
   return (
@@ -342,7 +347,7 @@ export default function LayananPendataan() {
                     }`}
                   >
                     <TabIconService size={20} />
-                    {data.tabTitle || "Prosedur Pendataan"}
+                    {data.tabTitle || "Prosedur Layanan"}
                     {activeTab === "service" && (
                       <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-t-full" />
                     )}
@@ -355,7 +360,7 @@ export default function LayananPendataan() {
                     }`}
                   >
                     <Clock size={20} />
-                    Jadwal Verifikasi
+                    Jam Operasional
                     {activeTab === "schedule" && (
                       <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-t-full" />
                     )}
@@ -434,7 +439,7 @@ export default function LayananPendataan() {
                                               )
                                             ))
                                           ) : (
-                                            <p className="text-sm text-slate-400 italic">Belum ada persyaratan khusus.</p>
+                                            <p className="text-sm text-slate-400 italic">Belum ada data persyaratan.</p>
                                           )}
                                       </ul>
                                   </div>
@@ -454,7 +459,7 @@ export default function LayananPendataan() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -487,13 +492,13 @@ export default function LayananPendataan() {
                                 <Clock size={24} />
                             </div>
                             <div>
-                                <h3 className="text-xl font-bold text-slate-800">Jadwal Pelayanan & Verifikasi</h3>
-                                <p className="text-sm text-slate-400">Waktu pelayanan kantor dan survei lapangan.</p>
+                                <h3 className="text-xl font-bold text-slate-800">Jadwal Pelayanan Kantor</h3>
+                                <p className="text-sm text-slate-400">Waktu pelayanan tatap muka di kantor kebudayaan.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
@@ -535,7 +540,7 @@ export default function LayananPendataan() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
                           {/* Link Peta */}
                           {data.mapLink && (
@@ -583,7 +588,7 @@ export default function LayananPendataan() {
                       >
                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                         <Globe className="relative z-10" size={20}/>
-                        <span className="relative z-10">{data.portalLabel || "Akses Registrasi"}</span>
+                        <span className="relative z-10">{data.portalLabel || "Akses Layanan"}</span>
                         <ArrowRight className="group-hover:translate-x-1 transition-transform relative z-10" size={20} />
                       </a>
                     </motion.div>
@@ -675,9 +680,9 @@ export default function LayananPendataan() {
                         </div>
                       ))
                   ) : (
-                     <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
+                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
                         Belum ada kontak tersedia.
-                     </div>
+                      </div>
                   )}
                 </div>
               </motion.div>

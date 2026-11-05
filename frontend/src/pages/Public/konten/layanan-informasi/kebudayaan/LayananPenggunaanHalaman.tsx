@@ -33,6 +33,10 @@ import {
   Map // Icon Lokasi/Halaman
 } from "lucide-react";
 
+// --- KONFIGURASI API (DINAMIS) ---
+// ✅ MENGGUNAKAN VARIABLE ENV VITE
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 // --- TIPE DATA DARI BACKEND (Sesuai Admin) ---
 interface ContentData {
   layanan: string;
@@ -116,8 +120,8 @@ export default function LayananPenggunaanHalaman() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Endpoint disesuaikan untuk kebudayaan / penggunaan-halaman
-        const response = await fetch("http://localhost:8000/api/kebudayaan/content/penggunaan-halaman");
+        // ✅ GUNAKAN API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/public/kebudayaan/content/penggunaan-halaman`);
         
         if (response.ok) {
           const rawData = await response.json();
@@ -254,7 +258,8 @@ export default function LayananPenggunaanHalaman() {
   const viewerProps = {
     judul: data.previewSectionTitle || "Penggunaan Halaman Cagar Budaya",
     deskripsi: data.previewSectionDesc || "Aturan dan tata cara penggunaan halaman dan fasilitas cagar budaya.",
-    endpoint: "http://localhost:8000/api/kebudayaan/upload/penggunaan-halaman", 
+    // ✅ GUNAKAN API_BASE_URL
+    endpoint: `${API_BASE_URL}/public/kebudayaan/upload/penggunaan-halaman`, 
   };
 
   return (
@@ -304,7 +309,6 @@ export default function LayananPenggunaanHalaman() {
               Informasi prosedur, tata tertib, dan perizinan penggunaan fasilitas halaman cagar budaya.
             </motion.p>
             
-
              <motion.div 
                initial={{ width: 0 }}
                animate={{ width: "6rem" }}
@@ -462,7 +466,7 @@ export default function LayananPenggunaanHalaman() {
                                             data.alur.map((step, idx) => (
                                               <div key={idx} className="relative">
                                                   <div className={`absolute -left-[29px] top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-4 border-white ${getStepColor(step.color).replace('border-','ring-')}`}>
-                                                    {step.step}
+                                                      {step.step}
                                                   </div>
                                                   <h4 className="font-bold text-slate-700 text-sm">{step.title}</h4>
                                                   <p className="text-slate-400 text-xs mt-1">{step.desc}</p>
@@ -495,13 +499,13 @@ export default function LayananPenggunaanHalaman() {
                                 <Clock size={24} />
                             </div>
                             <div>
-                                <h3 className="text-xl font-bold text-slate-800">Jadwal Operasional</h3>
-                                <p className="text-sm text-slate-400">Waktu operasional dan kunjungan di lokasi.</p>
+                                <h3 className="text-xl font-bold text-slate-800">Jadwal Pelayanan Kantor</h3>
+                                <p className="text-sm text-slate-400">Waktu pelayanan tatap muka di kantor kebudayaan.</p>
                             </div>
-                        </div>
+                          </div>
 
-                        {/* Jadwal Card Container */}
-                        <div className="grid gap-4">
+                          {/* Jadwal Card Container */}
+                          <div className="grid gap-4">
                             {data.jamOperasional.length > 0 ? (
                               data.jamOperasional.map((item, idx) => (
                                 <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border shadow-sm hover:shadow-md transition-shadow group ${item.status === 'off' ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
@@ -543,12 +547,12 @@ export default function LayananPenggunaanHalaman() {
                             ) : (
                               <p className="text-center text-slate-400 italic py-10">Jadwal belum diatur.</p>
                             )}
-                        </div>
+                          </div>
 
                           {/* Link Peta */}
                           {data.mapLink && (
                            <a href={data.mapLink} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:underline mt-2">
-                              <MapPin size={16} /> Lihat Lokasi Cagar Budaya di Google Maps
+                              <MapPin size={16} /> Lihat Lokasi Kantor di Google Maps
                            </a>
                           )}
                       </motion.div>
@@ -591,7 +595,7 @@ export default function LayananPenggunaanHalaman() {
                       >
                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                         <Globe className="relative z-10" size={20}/>
-                        <span className="relative z-10">{data.portalLabel || "Akses Layanan"}</span>
+                        <span className="relative z-10">{data.portalLabel || "Cek Jadwal"}</span>
                         <ArrowRight className="group-hover:translate-x-1 transition-transform relative z-10" size={20} />
                       </a>
                     </motion.div>
@@ -658,10 +662,10 @@ export default function LayananPenggunaanHalaman() {
                         <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
                             <ContactIconService className="text-yellow-400" size={20} />
                         </div>
-                        {data.contactSectionTitle || "Kontak Informasi"}
+                        {data.contactSectionTitle || "Kontak Pengelola"}
                     </h3>
                     <p className="text-sm text-slate-400 leading-relaxed">
-                        {data.contactSectionDesc || "Butuh bantuan? Hubungi kami."}
+                        {data.contactSectionDesc || "Hubungi kami untuk informasi ketersediaan tempat."}
                     </p>
                 </div>
 
@@ -674,7 +678,7 @@ export default function LayananPenggunaanHalaman() {
                             </div>
                             <div>
                             <p className="text-[10px] text-yellow-200 uppercase font-bold tracking-wider mb-0.5">
-                                {contact.name || "Pengelola"}
+                                {contact.name || "Admin"}
                             </p>
                             <p className="font-bold text-lg tracking-wide">
                                 {contact.number}
@@ -683,9 +687,9 @@ export default function LayananPenggunaanHalaman() {
                         </div>
                       ))
                   ) : (
-                     <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
+                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center italic text-slate-500 text-sm">
                         Belum ada kontak tersedia.
-                     </div>
+                      </div>
                   )}
                 </div>
               </motion.div>
