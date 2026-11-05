@@ -8,7 +8,7 @@ import StealthRoute from './Components/Feedback/StealthRoute.tsx';
 
 
 // --- Components & LAYOUT ---
-import PublicLayout from "@/Components/Layout/PublicLayout";
+import PublicLayout from "@/Components/Layout/PublicLayout.tsx";
 
 // --- HOMEPAGE  ---
 import HomePage from "./pages/Public/Home/homepage.tsx"; 
@@ -17,8 +17,8 @@ import HomePage from "./pages/Public/Home/homepage.tsx";
 import Login from "./feature/auth/loginpage.tsx";
 
 // --- Profil Admin ---
-import ProfilAvatar from "./pages/Admin/Components/profil/Components/ProfilAvatar.tsx";
-import ChangePassword from "./pages/Admin/Components/profil/Components/ChangePassword.tsx";
+import ProfilAvatar from "./pages/Admin/bagian/profil/komponen/ProfilAvatar.tsx";
+import ChangePassword from "./pages/Admin/bagian/profil/komponen/ChangePassword.tsx"
 
 // --- PAGES: PUBLIC (PROFIL) ---
 import ProfilePage from "./pages/Public/konten/Profil/ProfilePage.tsx";

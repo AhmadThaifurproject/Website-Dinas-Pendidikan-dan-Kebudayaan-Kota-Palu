@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 // --- IMPORT THEME CONTEXT ---
-import { ThemeContextAdmin } from "../../Components/theme/ThemeContextAdmin.tsx"; 
+import { ThemeContextAdmin } from "../../bagian/theme/ThemeContextAdmin.tsx"; 
 
 // --- KONFIGURASI API (DINAMIS) ---
 const API_BASE_URL = import.meta.env.VITE_API_URL;

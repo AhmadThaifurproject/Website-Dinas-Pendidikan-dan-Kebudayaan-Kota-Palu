@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import DuplicateFileAlert from "../../../../../Components/Feedback/DuplicateFileAlert.tsx";
-import { ThemeContextAdmin } from "../../../Components/theme/ThemeContextAdmin.tsx";
+import { ThemeContextAdmin } from "../../../bagian/theme/ThemeContextAdmin.tsx";
 
 // --- KONFIGURASI API ---
 const BASE_URL = import.meta.env.VITE_API_URL;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from 'axios';
-import { ThemeContextAdmin } from "../../../../pages/Admin/Components/theme/ThemeContextAdmin.tsx";
+import { ThemeContextAdmin } from "../../../../pages/Admin/bagian/theme/ThemeContextAdmin.tsx";
 import { useNavigate } from "react-router-dom"; 
 import { AlertTriangle, Lock, Menu } from "lucide-react";
 
@@ -23,15 +23,15 @@ import FormInputDataSubSekretariat from "../../../../pages/Admin/Konten/layanan/
 import AgendaControl from "../../../../pages/Admin/Konten/Poster/AgendaControll.tsx"; 
 import KontrolPanelKalender from "../../../../pages/Admin/Konten/Kalender/KontrolPanelKalender.tsx";
 import ControllPageProfile from "../../../../pages/Admin/Konten/Profil Pejabat/ControllPageProfile.tsx";
-import ProfilAvatar from "../../../../pages/Admin/Components/profil/Components/ProfilAvatar.tsx"; 
-import ChangePassword from "../../../../pages/Admin/Components/profil/Components/ChangePassword.tsx";
+import ProfilAvatar from "../../../../pages/Admin/bagian/profil/komponen/ProfilAvatar.tsx"; 
+import ChangePassword from "../../../../pages/Admin/bagian/profil/komponen/ChangePassword.tsx";
 
 // --- IMPORT KHUSUS SUPER ADMIN ---
 import PanelKontrolLayanan from "../../../../pages/SuperAdmin/Panel_Kontrol/PanelKontrolLayanan.tsx";
 import TrackingActivity from "../../../../pages/SuperAdmin/Panel_Kontrol/TrackingActivity.tsx"; 
 
 // ✅ FIX: Import Komponen Floating Chat untuk Admin
-import ChatHelp from "../../../../pages/Admin/Components/feature/bubblechat/ChatHelp.tsx";
+import ChatHelp from "../../../../pages/Admin/bagian/feature/bubblechat/ChatHelp.tsx";
 
 export default function DashboardAdmin() {
   const navigate = useNavigate();

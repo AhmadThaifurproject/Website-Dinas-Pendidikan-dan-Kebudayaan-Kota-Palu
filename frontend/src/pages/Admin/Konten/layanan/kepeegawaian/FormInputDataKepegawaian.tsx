@@ -16,7 +16,7 @@ import {
 import DuplicateFileAlert from "../../../../../Components/Feedback/DuplicateFileAlert.tsx";
 
 // --- IMPORT CONTEXT TEMA ---
-import { ThemeContextAdmin } from "../../../Components/theme/ThemeContextAdmin.tsx"; 
+import { ThemeContextAdmin } from "../../../bagian/theme/ThemeContextAdmin.tsx"; 
 
 // --- KONFIGURASI API ---
 const BASE_URL = import.meta.env.VITE_API_URL;

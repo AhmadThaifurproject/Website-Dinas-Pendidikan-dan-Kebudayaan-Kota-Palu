@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import DuplicateFileAlert from "../../../../../Components/Feedback/DuplicateFileAlert.tsx";
-import { ThemeContextAdmin } from "../../../Components/theme/ThemeContextAdmin.tsx";
+import { ThemeContextAdmin } from "../../../bagian/theme/ThemeContextAdmin.tsx";
 
 // --- KONFIGURASI API (DINAMIS) ---
 const API_CATEGORY_SLUG = "asetdankeuangan"; 
