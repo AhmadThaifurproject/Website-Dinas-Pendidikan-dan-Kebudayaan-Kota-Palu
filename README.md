@@ -57,14 +57,15 @@ Aplikasi portal publik modern berbasis web yang dirancang untuk menyajikan infor
 cd backend
 composer install
 cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+php artisan serve
 ```
-### 1. Frontend (React + Vite)
+### 2. Frontend (React + Vite)
 ```bash
 cd frontend
 npm install
 cp .env.example .env
 npm run dev
 
-php artisan key:generate
-php artisan migrate --seed
-php artisan serve
+
